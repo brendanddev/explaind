@@ -4,3 +4,6 @@ version = "0.1.0"
 description = "Local-first debugging CLI powered by Gemma 4"
 readme = "README.md"
 requires-python = ">=3.11"
+
+[project.scripts]
+explaind = "explaind.cli:app"
