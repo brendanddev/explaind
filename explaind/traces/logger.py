@@ -15,7 +15,7 @@ def save_session(session: TraceSession) -> Path:
     """
     SESSIONS_DIR.mkdir(parents=True, exist_ok=True)
 
-    safe_ts = session.timestamp.replace(":", "-").replace(".", "-")
+    safe_ts = session.timestamp.replace(":", "-").replace(".", "-").replace("+", "-")
     path = SESSIONS_DIR / f"session_{safe_ts}.json"
 
     with open(path, "w") as f:

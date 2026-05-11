@@ -2,6 +2,7 @@ import sys
 import json
 import argparse
 from explaind.main import run
+from explaind.spinner import Spinner
 
 
 def main():
@@ -34,5 +35,6 @@ def main():
         print("usage: explaind [file]  |  cat file | explaind  |  explaind < file", file=sys.stderr)
         sys.exit(1)
 
-    result = run(content)
+    with Spinner():
+        result = run(content)
     print(json.dumps(result, indent=2))

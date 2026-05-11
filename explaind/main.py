@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import sys
 import time
 import uuid
 from datetime import datetime, timezone
@@ -81,21 +82,38 @@ def run(input_text: str) -> dict:
     user_prompt = build_prompt(input_text, gemma_md=gemma_md)
 
     start = time.monotonic()
-
-    raw = run_model(user_prompt)
-    result = parse_and_validate(raw)
-
+    raw: str | None = None
     retry_triggered = False
-    if result is None:
-        retry_triggered = True
+    inference_error: str | None = None
+
+    try:
         raw = run_model(user_prompt)
-        result = parse_and_validate(raw)
+    except Exception as exc:
+        inference_error = str(exc)
+
+    result = parse_and_validate(raw) if raw is not None else None
+
+    if result is None and inference_error is None:
+        retry_triggered = True
+        try:
+            raw = run_model(user_prompt)
+        except Exception as exc:
+            inference_error = str(exc)
+        result = parse_and_validate(raw) if raw is not None else None
 
     if result is None:
         result = FAILURE_OBJECT
 
     latency_ms = round((time.monotonic() - start) * 1000, 2)
     violation = check_constraint_violation(result, input_text)
+
+    metadata: dict = {
+        "constraint_violation_detected": violation,
+        "retry_triggered": retry_triggered,
+        "schema_valid": result is not FAILURE_OBJECT,
+    }
+    if inference_error is not None:
+        metadata["inference_error"] = inference_error
 
     session = TraceSession(
         id=str(uuid.uuid4()),
@@ -105,19 +123,20 @@ def run(input_text: str) -> dict:
         user_prompt=user_prompt,
         gemma_context=gemma_md,
         model_name=MODEL,
+        raw_output=raw,
         final_output=json.dumps(result),
         latency_ms=latency_ms,
-        metadata={
-            "constraint_violation_detected": violation,
-            "retry_triggered": retry_triggered,
-            "schema_valid": result is not FAILURE_OBJECT,
-        },
+        metadata=metadata,
     )
 
     try:
         session.analysis_report = _engine.analyze(session).to_dict()
-        save_session(session)
     except Exception:
         pass
+
+    try:
+        save_session(session)
+    except Exception as exc:
+        print(f"explaind: warning: trace not saved: {exc}", file=sys.stderr)
 
     return result
