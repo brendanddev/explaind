@@ -27,7 +27,7 @@ class BehaviorReport:
     speculation_score: float
     uncertainty_usage_rate: float
     constraint_violation_flags: list
-    structure_validity: bool
+    structure_validity: float
     failure_pattern_tags: list = field(default_factory=list)  # Slice 3.1+
 
     def to_dict(self) -> dict:

@@ -6,8 +6,10 @@ from explaind.analysis.models import BehaviorReport, Analyzer, MetricResult
 from explaind.analysis.analyzers.speculation import SpeculationAnalyzer
 from explaind.analysis.analyzers.constraints import ConstraintAnalyzer
 from explaind.analysis.analyzers.uncertainty import UncertaintyAnalyzer
-from explaind.analysis.analyzers.structure import StructureAnalyzer
-from explaind.analysis.slice_3_1 import compute_speculation_score, compute_uncertainty_rate
+from explaind.analysis.analyzers.structure import StructureAnalyzer, analyze_structure
+from explaind.analysis.scoring import compute_speculation_score, compute_uncertainty_rate
+from explaind.analysis.violations import analyze_constraint_violations
+from explaind.analysis.failure_tags import tag_failure_patterns
 
 
 def _default_analyzers() -> list[Analyzer]:
@@ -34,18 +36,6 @@ def _output_to_text(final_output: str) -> str:
     return " ".join(parts)
 
 
-def _build_violation_flags(constraints: dict) -> list[str]:
-    """Derive human-readable violation flags from ConstraintAnalyzer metrics."""
-    flags = []
-    if constraints.get("constraint_violation_detected"):
-        flags.append("constraint_violation_detected")
-    if not constraints.get("schema_valid", True):
-        flags.append("schema_invalid")
-    if constraints.get("retry_triggered"):
-        flags.append("retry_triggered")
-    return flags
-
-
 class AnalysisEngine:
     """Orchestrates all analyzers and returns a BehaviorReport.
 
@@ -64,15 +54,28 @@ class AnalysisEngine:
             result: MetricResult = analyzer.analyze(trace)
             per_results[result.analyzer] = result.metrics
 
-        constraints = per_results.get("constraints", {})
-        structure   = per_results.get("structure",   {})
+        try:
+            output_dict = json.loads(trace.final_output)
+        except (json.JSONDecodeError, ValueError):
+            output_dict = {}
 
         output_text = _output_to_text(trace.final_output)
+        speculation_score = compute_speculation_score(output_text)
+        uncertainty_rate = compute_uncertainty_rate(output_text)
+        violation_flags = analyze_constraint_violations(trace.final_output)
+        structure_report = analyze_structure(output_dict)
+
+        analysis_metadata = {
+            "speculation_score": speculation_score,
+            "uncertainty_usage_rate": uncertainty_rate,
+            "constraint_violation_flags": violation_flags,
+            "structure_report": structure_report,
+        }
 
         return BehaviorReport(
-            speculation_score=compute_speculation_score(output_text),
-            uncertainty_usage_rate=compute_uncertainty_rate(output_text),
-            constraint_violation_flags=_build_violation_flags(constraints),
-            structure_validity=structure.get("format_stability", False),
-            failure_pattern_tags=[],  # Slice 3.2+
+            speculation_score=speculation_score,
+            uncertainty_usage_rate=uncertainty_rate,
+            constraint_violation_flags=violation_flags,
+            structure_validity=structure_report["structure_validity"],
+            failure_pattern_tags=tag_failure_patterns(output_dict, analysis_metadata),
         )
