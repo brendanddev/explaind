@@ -2,7 +2,20 @@
 
 A local-first debugging CLI powered by Gemma 4.
 
-> Built as part of the DEV Gemma 4 Challenge
+---
+
+## Overview
+
+This project has been built as part of the DEV Gemma 4 Challenge, with the goal of exploring how structured prompting, deterministic pipelines, and persistent context layers can influence and improve LLM debugging reliability.
+
+> See [Gemma 4 DEV Challenge](https://dev.to/devteam/join-the-gemma-4-challenge-3000-prize-pool-for-ten-winners-23in?)
+
+Rather than treating the model as a black box that produces one-off answers, this system is designed around the idea that model behavior can be shaped, measured, and iteratively improved through:
+
+- strict input/output constraints  
+- persistent reasoning context (GEMMA.md)  
+- traceable execution flows  
+- and feedback loops that evaluate consistency over time  
 
 ---
 

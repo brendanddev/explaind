@@ -21,3 +21,4 @@ class TraceSession:
     gemma_context: Optional[str] = None
     thinking_trace: Optional[str] = None
     metadata: dict = field(default_factory=dict)
+    analysis_report: Optional[dict] = None

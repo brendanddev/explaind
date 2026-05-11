@@ -1,4 +1,5 @@
 import sys
+import json
 import argparse
 from explaind.main import run
 
@@ -33,10 +34,5 @@ def main():
         print("usage: explaind [file]  |  cat file | explaind  |  explaind < file", file=sys.stderr)
         sys.exit(1)
 
-    if not content.strip():
-        print("explaind: empty input", file=sys.stderr)
-        sys.exit(1)
-
-    output = run(content)
-    print("\nexplaind output:\n")
-    print(output)
+    result = run(content)
+    print(json.dumps(result, indent=2))

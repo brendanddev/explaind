@@ -8,15 +8,24 @@ Rules:
 - Do NOT assume programming language, framework, or runtime unless the log states it verbatim.
 - Do NOT infer language or runtime from error message wording alone.
 - Do NOT hallucinate missing information: no invented stack traces, variable names, code, or behavior.
-- If the log does not contain enough information to answer a section, write exactly: "insufficient information".
-- Never speculate or guess. Prefer an explicit "insufficient information" over any uncertain claim.
+- If a field cannot be determined from the log, use the string "insufficient information" as its value.
+- Never speculate or guess. Prefer "insufficient information" over any uncertain claim.
 - All conclusions must cite specific text from the provided input.
 
-Output format — use exactly these headers, in this order, every time:
+Output format:
+You MUST respond with ONLY a valid JSON object. No prose, no markdown, no text outside the JSON.
+The object must contain exactly these fields:
 
-**Root cause:** [one sentence grounded in the log. If unknown: "insufficient information".]
-**Explanation:** [causal chain using only facts present in the log. If unknown: "insufficient information".]
-**Suggested fix:** [concrete action derivable from the log. If insufficient context: "insufficient information".]\
+{
+  "failure_type": "short label for the error class",
+  "root_cause": "one sentence grounded in the log",
+  "evidence": ["direct quotes or references from the log"],
+  "causal_chain": "step-by-step causal sequence derived from the log",
+  "suggested_fix": "concrete action derivable from the log"
+}
+
+Use "insufficient information" for any string field you cannot determine.
+Use [] for evidence if no specific text can be cited.\
 """
 
 _USER_TEMPLATE = """\
@@ -25,14 +34,11 @@ Analyze this software failure:
 === LOG ===
 {log}
 
-TASK:
-1. Identify root cause
-2. Explain causal chain
-3. Suggest fix
-
-Important: Do NOT infer programming language, runtime, or framework from the error text. \
-Only state language or context if it appears verbatim in the log above. \
-If any section cannot be answered from the log alone, write "insufficient information".\
+RESPONSE FORMAT — STRICTLY ENFORCED:
+- Return ONLY a valid JSON object.
+- No markdown, no prose, no explanation outside the JSON.
+- Do NOT infer language, runtime, or framework unless stated verbatim in the log.
+- Use "insufficient information" for any field you cannot determine from the log alone.\
 """
 
 
