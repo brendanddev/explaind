@@ -6,98 +6,116 @@ A local-first debugging CLI powered by Gemma 4.
 
 ## Overview
 
-This project has been built as part of the DEV Gemma 4 Challenge, with the goal of exploring how structured prompting, deterministic pipelines, and persistent context layers can influence and improve LLM debugging reliability.
+**explaind** is a developer tool that turns raw software failures (logs, stack traces, and diffs) into grounded, structured explanations using local Gemma 4 models.
 
-> See [Gemma 4 DEV Challenge](https://dev.to/devteam/join-the-gemma-4-challenge-3000-prize-pool-for-ten-winners-23in?)
+It helps answer:
 
-Rather than treating the model as a black box that produces one-off answers, this system is designed around the idea that model behavior can be shaped, measured, and iteratively improved through:
+> “Why did this break, and what actually caused it?”
 
-- strict input/output constraints  
-- persistent reasoning context (GEMMA.md)  
-- traceable execution flows  
-- and feedback loops that evaluate consistency over time  
+Instead of unstructured AI responses, explaind produces **evidence-based debugging reasoning**:
 
----
-
-## What it does
-
-So far, `explaind` turns raw software failures (logs, stack traces, git diffs) into grounded root-cause explanations using local Gemma 4 models.
-
-It acts as a **debugging reasoning layer** over failure output:
-
-- identifies root causes
-- reconstructs causal chains
-- suggests fixes
-- grounds answers in evidence from logs/diffs
+- root cause identification  
+- causal chain reconstruction  
+- fix suggestions grounded in logs  
+- structured, inspectable output  
 
 ---
 
-## Core idea: GEMMA.md as a model behavior spec
+## Core idea
 
-Unlike traditional AI tools, `explaind` treats the model as something to be **studied, not just used**.
+At its core, explaind treats debugging as a **structured reasoning problem**, not a chat problem.
 
-We introduce `GEMMA.md`, a project-level file inspired by `CLAUDE.md`, which serves as:
+Each failure is transformed into a consistent artifact:
 
-> A living specification of how Gemma 4 behaves in debugging tasks.
+{
+  "failure_type": "",
+  "root_cause": "",
+  "evidence": [],
+  "causal_chain": "",
+  "suggested_fix": ""
+}
 
-But unlike static prompt files, `GEMMA.md` is **learned from observation**.
-
----
-
-## Experimental loop
-
-Each run of `explaind` can optionally log:
-
-- raw input (logs / diffs)
-- model output
-- reasoning traces (when available)
-- structured failure modes (hallucination, formatting errors, missing evidence, etc.)
-
-These logs are analyzed to:
-
-- identify recurring model behaviors
-- detect failure patterns
-- refine prompting strategies
-- update `GEMMA.md` over time
+This makes debugging outputs:
+- reproducible  
+- comparable  
+- inspectable over time  
 
 ---
 
-## Why this matters
+## GEMMA.md — persistent debugging behavior layer
 
-Gemma 4 is not treated as a black box.
+explaind introduces `GEMMA.md`, a project-level reasoning guide inspired by `CLAUDE.md`.
 
-Instead, we explore:
+It defines how the model should behave during debugging tasks:
 
-> What patterns emerge when a strong open model is consistently used for structured debugging tasks?
+- prefer grounded evidence over inference  
+- avoid hallucinating missing context  
+- enforce structured reasoning output  
+- bias toward “insufficient information” when uncertain  
 
-This turns the project into a lightweight **model behavior research tool**, not just a CLI.
+Unlike a static prompt, `GEMMA.md` is designed to be **iteratively refined based on observed failures in real outputs**.
 
 ---
 
 ## Why Gemma 4
 
-We use Gemma 4 E2B locally because:
+Gemma 4 is used because it:
 
-- it runs fully offline (local-first constraint)
-- it handles structured reasoning tasks well
-- it exposes useful intermediate reasoning traces
-- it is sensitive enough to prompt design that behavior differences are observable
+- runs locally (offline-first debugging)
+- handles structured reasoning reliably
+- produces useful intermediate reasoning signals
+- is sensitive enough to prompt structure to make behavior changes observable
 
-This makes it ideal for studying model behavior under constrained debugging prompts.
+This makes it ideal for structured debugging pipelines.
 
 ---
 
-## What gets logged (optional experimental mode)
+## Observability (lightweight experimental layer)
 
-When enabled, `explaind` can record:
+Each run of explaind optionally records a **trace session**, including:
 
-- input logs / diffs
-- model responses
-- reasoning traces (if exposed)
-- structured evaluation of output quality
+- input log
+- model output
+- latency
+- structured metadata
 
-This enables iterative improvement of:
+These traces are used to:
+- inspect model consistency
+- identify recurring failure patterns
+- refine prompts and GEMMA.md rules over time
 
-- prompts
-- output schema
-- GEMMA.md rules
+This is an **experimental layer**, not required for core functionality.
+
+---
+
+## What makes this different
+
+Most tools:
+AI explains your logs
+
+explaind:
+A deterministic debugging pipeline that produces structured reasoning artifacts using a local LLM, with optional instrumentation to study and improve its behavior over time
+
+---
+
+## Design principle
+
+The system is intentionally split:
+
+### Core product (must work)
+- CLI debugging tool
+- structured explanations
+- reliable local inference
+
+### Experimental layer (bonus)
+- trace logging
+- GEMMA.md refinement
+- output analysis metrics
+
+---
+
+## Final insight
+
+The CLI is the product.
+
+The reasoning instrumentation is the twist.

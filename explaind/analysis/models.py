@@ -17,14 +17,18 @@ class MetricResult:
 
 
 @dataclass
-class AnalysisReport:
-    """Aggregated output of all analyzers for one trace."""
+class BehaviorReport:
+    """Slice 3.0 — structured summary of one inference trace.
+
+    Fields not yet implemented carry their default values and are populated
+    by later slices (3.1+). Do not add logic here — extend via analyzers.
+    """
 
     speculation_score: float
-    constraint_violations: int
-    insufficient_info_compliance: float
-    format_stability: bool
-    per_analyzer_results: dict = field(default_factory=dict)
+    uncertainty_usage_rate: float
+    constraint_violation_flags: list
+    structure_validity: bool
+    failure_pattern_tags: list = field(default_factory=list)  # Slice 3.1+
 
     def to_dict(self) -> dict:
         return dataclasses.asdict(self)

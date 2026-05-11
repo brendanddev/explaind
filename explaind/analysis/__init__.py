@@ -1,4 +1,4 @@
 from explaind.analysis.engine import AnalysisEngine
-from explaind.analysis.models import AnalysisReport, Analyzer, MetricResult
+from explaind.analysis.models import BehaviorReport, Analyzer, MetricResult
 
-__all__ = ["AnalysisEngine", "AnalysisReport", "Analyzer", "MetricResult"]
+__all__ = ["AnalysisEngine", "BehaviorReport", "Analyzer", "MetricResult"]
