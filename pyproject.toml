@@ -6,4 +6,4 @@ readme = "README.md"
 requires-python = ">=3.11"
 
 [project.scripts]
-explaind = "explaind.cli:app"
+explaind = "explaind.cli:main"
