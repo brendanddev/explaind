@@ -1,8 +1,11 @@
 import sys
 import json
 import argparse
+
+from rich.console import Console
+
 from explaind.main import run
-from explaind.spinner import Spinner
+from explaind.render import render_result
 
 
 def main():
@@ -15,6 +18,11 @@ def main():
         "file",
         nargs="?",
         help="path to log file (reads stdin if omitted)",
+    )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="output raw JSON (machine-readable mode)",
     )
     args = parser.parse_args()
 
@@ -35,6 +43,13 @@ def main():
         print("usage: explaind [file]  |  cat file | explaind  |  explaind < file", file=sys.stderr)
         sys.exit(1)
 
-    with Spinner():
+    err = Console(stderr=True)
+    out = Console()
+
+    with err.status("[dim]analyzing…[/dim]", spinner="dots"):
         result = run(content)
-    print(json.dumps(result, indent=2))
+
+    if args.json:
+        print(json.dumps({k: v for k, v in result.items() if k != "_meta"}, indent=2))
+    else:
+        render_result(result, out)

@@ -1,32 +1,41 @@
-# explaind
+# explaind — Gemma 4 DEV Challenge Debugging Intelligence System
 
 A local-first debugging CLI powered by Gemma 4.
 
 ---
 
+## Gemma 4 DEV Challenge Context
+
+This project is built as part of the **Gemma 4 DEV Challenge**, demonstrating how local LLMs can be used for structured debugging reasoning rather than conversational assistance.
+
+The goal is to show that Gemma 4 can:
+
+- interpret software failures (logs, stack traces, diffs)
+- produce structured, grounded reasoning outputs
+- enforce consistent debugging schemas
+- operate fully local-first (no API dependency)
+
+---
+
 ## Overview
 
-**explaind** is a developer tool that turns raw software failures (logs, stack traces, and diffs) into grounded, structured explanations using local Gemma 4 models.
+**explaind** is a developer tool that transforms raw software failures—logs, stack traces, and diffs—into grounded, structured explanations using local Gemma 4 models.
 
 It helps answer:
 
 > “Why did this break, and what actually caused it?”
 
-Instead of unstructured AI responses, explaind produces **evidence-based debugging reasoning**:
-
-- root cause identification  
-- causal chain reconstruction  
-- fix suggestions grounded in logs  
-- structured, inspectable output  
+Instead of unstructured AI responses, explaind produces **evidence-based debugging reasoning artifacts** that are consistent and inspectable.
 
 ---
 
 ## Core idea
 
-At its core, explaind treats debugging as a **structured reasoning problem**, not a chat problem.
+Debugging is treated as a **structured reasoning problem**, not a chat problem.
 
 Each failure is transformed into a consistent artifact:
 
+```json
 {
   "failure_type": "",
   "root_cause": "",
@@ -34,11 +43,14 @@ Each failure is transformed into a consistent artifact:
   "causal_chain": "",
   "suggested_fix": ""
 }
+```
 
 This makes debugging outputs:
-- reproducible  
-- comparable  
-- inspectable over time  
+
+- reproducible across runs  
+- comparable between failures  
+- grounded in log evidence  
+- suitable for tooling or automation  
 
 ---
 
@@ -48,12 +60,12 @@ explaind introduces `GEMMA.md`, a project-level reasoning guide inspired by `CLA
 
 It defines how the model should behave during debugging tasks:
 
-- prefer grounded evidence over inference  
+- prefer grounded log evidence over inference  
 - avoid hallucinating missing context  
-- enforce structured reasoning output  
-- bias toward “insufficient information” when uncertain  
+- enforce structured output formats  
+- default to “insufficient information” when uncertain  
 
-Unlike a static prompt, `GEMMA.md` is designed to be **iteratively refined based on observed failures in real outputs**.
+Unlike static prompts, `GEMMA.md` is intended to be iteratively refined based on observed model behavior across real debugging runs.
 
 ---
 
@@ -61,40 +73,92 @@ Unlike a static prompt, `GEMMA.md` is designed to be **iteratively refined based
 
 Gemma 4 is used because it:
 
-- runs locally (offline-first debugging)
-- handles structured reasoning reliably
-- produces useful intermediate reasoning signals
-- is sensitive enough to prompt structure to make behavior changes observable
+- runs locally (offline-first debugging)  
+- supports structured reasoning workflows  
+- responds well to strict prompt constraints  
+- makes reasoning behavior observable through prompt design  
 
-This makes it ideal for structured debugging pipelines.
+This makes it suitable for deterministic debugging pipelines.
 
 ---
 
-## Observability (lightweight experimental layer)
+## Core product
 
-Each run of explaind optionally records a **trace session**, including:
+The primary experience of explaind is a CLI debugging workflow:
 
-- input log
-- model output
-- latency
-- structured metadata
+```bash
+explaind explain error.log
+```
 
-These traces are used to:
-- inspect model consistency
-- identify recurring failure patterns
-- refine prompts and GEMMA.md rules over time
+or:
 
-This is an **experimental layer**, not required for core functionality.
+```bash
+cat error.log | explaind explain
+```
+
+Output includes:
+
+- root cause identification  
+- causal chain reconstruction  
+- evidence extracted from logs  
+- suggested fix grounded in observed behavior  
+
+The focus is **clarity, grounding, and reproducibility**.
+
+---
+
+## Structured output mode
+
+When enabled, explaind produces structured JSON alongside human-readable explanations.
+
+This enables:
+
+- integration into tooling pipelines  
+- reproducible debugging analysis  
+- consistent evaluation of failure types  
+- machine-readable debugging artifacts  
+
+---
+
+## Observability layer (experimental)
+
+explaind includes an optional lightweight tracing system for inspecting model behavior.
+
+Each trace may include:
+
+- input log  
+- model output  
+- latency  
+- structured metadata from analysis pipeline  
+
+This layer is used for:
+
+- debugging the tool itself  
+- inspecting consistency across runs  
+- refining prompts and `GEMMA.md` rules over time  
+
+This is an experimental layer and not required for core functionality.
 
 ---
 
 ## What makes this different
 
 Most tools:
-AI explains your logs
+
+AI explains your logs in natural language.
 
 explaind:
-A deterministic debugging pipeline that produces structured reasoning artifacts using a local LLM, with optional instrumentation to study and improve its behavior over time
+
+A structured debugging pipeline that produces grounded reasoning artifacts using a local LLM (Gemma 4), with optional instrumentation to inspect and understand model behavior.
+
+---
+
+## Key differences
+
+- structured outputs instead of free-form responses  
+- local-first execution (no cloud dependency)  
+- persistent behavior rules via `GEMMA.md`  
+- evidence-grounded reasoning instead of speculation  
 
 ---
 
@@ -102,15 +166,21 @@ A deterministic debugging pipeline that produces structured reasoning artifacts 
 
 The system is intentionally split:
 
-### Core product (must work)
-- CLI debugging tool
-- structured explanations
-- reliable local inference
+### Core product (user-facing)
 
-### Experimental layer (bonus)
-- trace logging
-- GEMMA.md refinement
-- output analysis metrics
+- CLI debugging tool  
+- structured explanations  
+- reliable local inference  
+
+### Configuration layer
+
+- `GEMMA.md` for persistent debugging behavior rules  
+
+### Experimental layer
+
+- trace logging  
+- output inspection  
+- debugging of model reasoning behavior  
 
 ---
 
@@ -118,4 +188,8 @@ The system is intentionally split:
 
 The CLI is the product.
 
-The reasoning instrumentation is the twist.
+Everything else exists to improve clarity, consistency, and grounding of debugging explanations.
+
+The system is designed to make LLM-assisted debugging:
+
+structured, reproducible, and evidence-based rather than conversational or speculative.

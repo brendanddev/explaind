@@ -139,4 +139,9 @@ def run(input_text: str) -> dict:
     except Exception as exc:
         print(f"explaind: warning: trace not saved: {exc}", file=sys.stderr)
 
+    result = {**result, "_meta": {
+        "model": MODEL,
+        "latency_ms": latency_ms,
+        **metadata,
+    }}
     return result
