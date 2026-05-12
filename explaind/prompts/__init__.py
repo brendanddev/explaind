@@ -32,8 +32,9 @@ _ABILITY_TEMPLATE = """\
 """
 
 _INPUT_TEMPLATE = """\
-=== INPUT ===
-{log}\
+<input>
+{log}
+</input>\
 """
 
 _TRAJECTORY_MAP: dict[str, str] = {

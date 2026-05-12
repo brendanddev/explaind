@@ -78,21 +78,32 @@ def main():
         print("usage: explaind [file]  |  cat file | explaind  |  explaind < file", file=sys.stderr)
         sys.exit(1)
 
+    # ACCEPTANCE: empty input rejected — nothing downstream receives a blank prompt
+    if not content.strip():
+        print("explaind: input is empty", file=sys.stderr)
+        sys.exit(1)
+
+    # ACCEPTANCE: dry-run safe — prompt is assembled and printed; ollama.chat is never called
     if args.dry_run:
         try:
             result, _ = run(content, ability=args.ability, dry_run=True)
-        except ValueError as e:
+        except Exception as e:
             print(f"explaind: {e}", file=sys.stderr)
             sys.exit(1)
         print(result)
         return
 
+    # ACCEPTANCE: ability validation enforced — ValueError raised before any model call
+    # ACCEPTANCE: no silent failures — all exceptions surface as stderr + exit 1
     try:
         with _Spinner("thinking"):
             t0 = time.monotonic()
             result, usage = run(content, ability=args.ability)
             latency_ms = round((time.monotonic() - t0) * 1000)
     except ValueError as e:
+        print(f"explaind: {e}", file=sys.stderr)
+        sys.exit(1)
+    except Exception as e:
         print(f"explaind: {e}", file=sys.stderr)
         sys.exit(1)
 

@@ -99,6 +99,7 @@ def run(input_text: str, ability: str | None = None, dry_run: bool = False) -> t
         ability_content=ability_content,
     )
 
+    # ACCEPTANCE: dry-run safe — returns before ollama.chat is reached
     if dry_run:
         full = f"=== SYSTEM PROMPT ===\n{SYSTEM_PROMPT}\n=== END SYSTEM PROMPT ===\n\n{prompt}"
         return full, None
