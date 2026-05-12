@@ -4,7 +4,7 @@ from pathlib import Path
 
 from explaind.gemma import load_gemma_md
 from explaind.invoker import ModelInvoker
-from explaind.prompts import SYSTEM_PROMPT, build_prompt
+from explaind.prompts import SYSTEM_PROMPT, assemble_prompt, build_bias_field, format_ability
 
 ABILITIES_DIR = Path("abilities")
 
@@ -39,21 +39,24 @@ def run(
     invoker must be provided when dry_run=False.
     """
     gemma_md = load_gemma_md()
-    ability_content = load_ability(ability) if ability else None
 
-    prompt = build_prompt(
-        input_text,
+    ability_content = load_ability(ability) if ability else None
+    formatted_ability = format_ability(ability, ability_content) if ability_content else None
+
+    bias_field = build_bias_field(ability or "balanced")
+
+    full_prompt = assemble_prompt(
+        system=SYSTEM_PROMPT,
         gemma_md=gemma_md,
-        ability_name=ability,
-        ability_content=ability_content,
+        ability=formatted_ability,
+        bias_field=bias_field,
+        user_input=input_text,
     )
 
     if dry_run:
-        full = f"=== SYSTEM PROMPT ===\n{SYSTEM_PROMPT}\n=== END SYSTEM PROMPT ===\n\n{prompt}"
-        return full, None
+        return full_prompt, None
 
     if invoker is None:
         raise ValueError("invoker is required when dry_run=False")
 
-    full_prompt = f"{SYSTEM_PROMPT}\n\n{prompt}"
     return invoker.invoke(full_prompt), None

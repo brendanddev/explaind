@@ -1,0 +1,22 @@
+=== SYSTEM PROMPT ===
+SYSTEM
+=== END SYSTEM PROMPT ===
+
+=== REASONING CONSTRAINTS ===
+GEMMA
+=== END REASONING CONSTRAINTS ===
+
+=== ABILITY: skeptical ===
+ABILITY TEXT
+=== END ABILITY ===
+
+BIAS FIELD
+- [BIAS: SKEPTICAL]
+- [TRAJECTORY: skeptical]
+- [EPISTEMIC: skeptical]
+- [INVARIANTS: ACTIVE]
+END BIAS FIELD
+
+<user_input>
+USER INPUT
+</user_input>
