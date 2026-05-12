@@ -54,6 +54,11 @@ def main():
         metavar="NAME",
         help="load abilities/<name>.md and inject into prompt",
     )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="print assembled prompt to stdout without calling the model",
+    )
     args = parser.parse_args()
 
     if args.file:
@@ -73,10 +78,23 @@ def main():
         print("usage: explaind [file]  |  cat file | explaind  |  explaind < file", file=sys.stderr)
         sys.exit(1)
 
-    with _Spinner("thinking"):
-        t0 = time.monotonic()
-        result, usage = run(content, ability=args.ability)
-        latency_ms = round((time.monotonic() - t0) * 1000)
+    if args.dry_run:
+        try:
+            result, _ = run(content, ability=args.ability, dry_run=True)
+        except ValueError as e:
+            print(f"explaind: {e}", file=sys.stderr)
+            sys.exit(1)
+        print(result)
+        return
+
+    try:
+        with _Spinner("thinking"):
+            t0 = time.monotonic()
+            result, usage = run(content, ability=args.ability)
+            latency_ms = round((time.monotonic() - t0) * 1000)
+    except ValueError as e:
+        print(f"explaind: {e}", file=sys.stderr)
+        sys.exit(1)
 
     print(result)
 

@@ -10,13 +10,24 @@ from explaind.prompts import SYSTEM_PROMPT, build_prompt
 MODEL = "gemma4-e2b_q4_k_m:latest"
 ABILITIES_DIR = Path("abilities")
 
+ALLOWED_ABILITIES = {
+    "balanced",
+    "skeptical",
+    "causal",
+    "compressive",
+    "exploratory",
+}
 
-def load_ability(name: str) -> str | None:
+
+def load_ability(name: str) -> str:
+    if name not in ALLOWED_ABILITIES:
+        allowed = ", ".join(sorted(ALLOWED_ABILITIES))
+        raise ValueError(f"unknown ability '{name}' (allowed: {allowed})")
     path = ABILITIES_DIR / f"{name}.md"
     try:
         return path.read_text(encoding="utf-8")
     except FileNotFoundError:
-        return None
+        raise ValueError(f"ability file missing: {path}")
 
 
 _ctx_cache: dict[str, int | None] = {}
@@ -75,7 +86,7 @@ def _extract_usage(response) -> dict | None:
     return usage
 
 
-def run(input_text: str, ability: str | None = None) -> tuple[str, dict | None]:
+def run(input_text: str, ability: str | None = None, dry_run: bool = False) -> tuple[str, dict | None]:
     """Return (response_text, usage_dict). usage_dict is None when Ollama
     does not include token counts in the response."""
     gemma_md = load_gemma_md()
@@ -87,6 +98,10 @@ def run(input_text: str, ability: str | None = None) -> tuple[str, dict | None]:
         ability_name=ability,
         ability_content=ability_content,
     )
+
+    if dry_run:
+        full = f"=== SYSTEM PROMPT ===\n{SYSTEM_PROMPT}\n=== END SYSTEM PROMPT ===\n\n{prompt}"
+        return full, None
 
     response = ollama.chat(
         model=MODEL,

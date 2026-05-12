@@ -36,6 +36,32 @@ _INPUT_TEMPLATE = """\
 {log}\
 """
 
+_TRAJECTORY_MAP: dict[str, str] = {
+    "balanced": "balanced",
+    "skeptical": "balanced",
+    "causal": "balanced",
+    "compressive": "compressive",
+    "exploratory": "exploratory",
+}
+
+_EPISTEMIC_MAP: dict[str, str] = {
+    "skeptical": "skeptical",
+}
+
+
+def build_bias_field(ability_name: str) -> str:
+    name = ability_name.lower()
+    trajectory = _TRAJECTORY_MAP.get(name, "balanced")
+    epistemic = _EPISTEMIC_MAP.get(name, "neutral")
+    return (
+        f"BIAS FIELD\n"
+        f"- [BIAS: {name.upper()}]\n"
+        f"- [TRAJECTORY: {trajectory}]\n"
+        f"- [EPISTEMIC: {epistemic}]\n"
+        f"- [INVARIANTS: ACTIVE]\n"
+        f"END BIAS FIELD"
+    )
+
 
 def build_prompt(
     log: str,
@@ -53,6 +79,8 @@ def build_prompt(
             name=ability_name or "custom",
             content=ability_content.strip(),
         ))
+
+    parts.append(build_bias_field(ability_name or "balanced"))
 
     parts.append(_INPUT_TEMPLATE.format(log=log.strip()))
 
