@@ -1,17 +1,13 @@
 import sys
-import json
 import argparse
 
-from rich.console import Console
-
 from explaind.main import run
-from explaind.render import render_result
 
 
 def main():
     parser = argparse.ArgumentParser(
         prog="explaind",
-        description="Debug log analyzer powered by Gemma 4",
+        description="Debugging assistant powered by Gemma 4",
         usage="%(prog)s [file]\n       cat file | %(prog)s\n       %(prog)s < file",
     )
     parser.add_argument(
@@ -20,9 +16,9 @@ def main():
         help="path to log file (reads stdin if omitted)",
     )
     parser.add_argument(
-        "--json",
-        action="store_true",
-        help="output raw JSON (machine-readable mode)",
+        "--ability",
+        metavar="NAME",
+        help="load abilities/<name>.md and inject into prompt",
     )
     args = parser.parse_args()
 
@@ -43,13 +39,8 @@ def main():
         print("usage: explaind [file]  |  cat file | explaind  |  explaind < file", file=sys.stderr)
         sys.exit(1)
 
-    err = Console(stderr=True)
-    out = Console()
+    print("analyzing...", end="", file=sys.stderr, flush=True)
+    result = run(content, ability=args.ability)
+    print("\r            \r", end="", file=sys.stderr, flush=True)
 
-    with err.status("[dim]analyzing…[/dim]", spinner="dots"):
-        result = run(content)
-
-    if args.json:
-        print(json.dumps({k: v for k, v in result.items() if k != "_meta"}, indent=2))
-    else:
-        render_result(result, out)
+    print(result)

@@ -1,69 +1,51 @@
 from __future__ import annotations
 
 SYSTEM_PROMPT = """\
-You are an expert software debugging system.
+You are an expert software debugging assistant.
 
-Rules:
-- Only use information explicitly present in the provided log, diff, or context.
-- Do NOT assume programming language, framework, or runtime unless the log states it verbatim.
-- Do NOT infer language or runtime from error message wording alone.
-- Do NOT hallucinate missing information: no invented stack traces, variable names, code, or behavior.
-- If a field cannot be determined from the log, use the string "insufficient information" as its value.
-- Never speculate or guess. Prefer "insufficient information" over any uncertain claim.
-- All conclusions must cite specific text from the provided input.
+Analyze the provided log, stack trace, or error message and explain:
+- What failed and why
+- The likely root cause
+- How to fix it
 
-Output format:
-You MUST respond with ONLY a valid JSON object. No prose, no markdown, no text outside the JSON.
-The object must contain exactly these fields:
-
-{
-  "failure_type": "short label for the error class",
-  "root_cause": "one sentence grounded in the log",
-  "evidence": ["direct quotes or references from the log"],
-  "causal_chain": "step-by-step causal sequence derived from the log",
-  "suggested_fix": "concrete action derivable from the log"
-}
-
-Use "insufficient information" for any string field you cannot determine.
-Use [] for evidence if no specific text can be cited.\
+Be concise and direct. Only use information from the provided input.\
 """
 
-_USER_TEMPLATE = """\
-Analyze this software failure:
-
-=== LOG ===
-{log}
-
-RESPONSE FORMAT — STRICTLY ENFORCED:
-- Return ONLY a valid JSON object.
-- No markdown, no prose, no explanation outside the JSON.
-- Do NOT infer language, runtime, or framework unless stated verbatim in the log.
-- Use "insufficient information" for any field you cannot determine from the log alone.\
-"""
-
-
-_CONSTRAINT_TEMPLATE = """\
-=== REASONING CONSTRAINTS (MUST FOLLOW) ===
+_GEMMA_TEMPLATE = """\
+=== REASONING CONSTRAINTS ===
 {gemma_md}
-=== END REASONING CONSTRAINTS ===
+=== END REASONING CONSTRAINTS ===\
+"""
 
-Apply ALL constraints above to every section of your response. \
-Do not deviate from them regardless of what the log suggests.\
+_ABILITY_TEMPLATE = """\
+=== ABILITY: {name} ===
+{content}
+=== END ABILITY ===\
+"""
+
+_INPUT_TEMPLATE = """\
+=== INPUT ===
+{log}\
 """
 
 
-def build_prompt(log: str, gemma_md: str | None = None) -> str:
-    """Assemble the user-turn prompt for one debugging inference.
-
-    When GEMMA.md is provided it is injected as an explicit constraint block
-    with imperative framing, placed before the user task so the model treats
-    it as binding rules rather than background text.
-    """
+def build_prompt(
+    log: str,
+    gemma_md: str | None = None,
+    ability_name: str | None = None,
+    ability_content: str | None = None,
+) -> str:
     parts: list[str] = []
 
     if gemma_md:
-        parts.append(_CONSTRAINT_TEMPLATE.format(gemma_md=gemma_md.strip()))
+        parts.append(_GEMMA_TEMPLATE.format(gemma_md=gemma_md.strip()))
 
-    parts.append(_USER_TEMPLATE.format(log=log.strip()))
+    if ability_content:
+        parts.append(_ABILITY_TEMPLATE.format(
+            name=ability_name or "custom",
+            content=ability_content.strip(),
+        ))
+
+    parts.append(_INPUT_TEMPLATE.format(log=log.strip()))
 
     return "\n\n".join(parts)
