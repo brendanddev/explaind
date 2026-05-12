@@ -32,15 +32,15 @@ _ABILITY_TEMPLATE = """\
 """
 
 _INPUT_TEMPLATE = """\
-<input>
+<user_input>
 {log}
-</input>\
+</user_input>\
 """
 
 _TRAJECTORY_MAP: dict[str, str] = {
     "balanced": "balanced",
-    "skeptical": "balanced",
-    "causal": "balanced",
+    "skeptical": "skeptical",
+    "causal": "causal",
     "compressive": "compressive",
     "exploratory": "exploratory",
 }

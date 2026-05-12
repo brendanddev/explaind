@@ -24,14 +24,14 @@ def test_ability_before_bias_field():
 
 def test_bias_field_before_input():
     prompt = build_prompt("input")
-    assert prompt.index("BIAS FIELD") < prompt.index("<input>")
+    assert prompt.index("BIAS FIELD") < prompt.index("<user_input>")
 
 
 def test_dry_run_system_prompt_is_first():
     result, _ = run("test input", dry_run=True)
     system_pos = result.index("=== SYSTEM PROMPT ===")
     bias_pos = result.index("BIAS FIELD")
-    input_pos = result.index("<input>")
+    input_pos = result.index("<user_input>")
     assert system_pos < bias_pos
     assert system_pos < input_pos
 

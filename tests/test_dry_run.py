@@ -33,8 +33,8 @@ def test_dry_run_contains_bias_field():
 
 def test_dry_run_contains_xml_input():
     result, _ = run("my specific input text", dry_run=True)
-    assert "<input>" in result
-    assert "</input>" in result
+    assert "<user_input>" in result
+    assert "</user_input>" in result
     assert "my specific input text" in result
 
 

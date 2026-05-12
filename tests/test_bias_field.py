@@ -3,8 +3,8 @@ from explaind.prompts import build_bias_field
 
 _EXPECTED = {
     "balanced":    {"bias": "BALANCED",    "trajectory": "balanced",    "epistemic": "neutral"},
-    "skeptical":   {"bias": "SKEPTICAL",   "trajectory": "balanced",    "epistemic": "skeptical"},
-    "causal":      {"bias": "CAUSAL",      "trajectory": "balanced",    "epistemic": "neutral"},
+    "skeptical":   {"bias": "SKEPTICAL",   "trajectory": "skeptical",   "epistemic": "skeptical"},
+    "causal":      {"bias": "CAUSAL",      "trajectory": "causal",      "epistemic": "neutral"},
     "compressive": {"bias": "COMPRESSIVE", "trajectory": "compressive", "epistemic": "neutral"},
     "exploratory": {"bias": "EXPLORATORY", "trajectory": "exploratory", "epistemic": "neutral"},
 }
