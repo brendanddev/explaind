@@ -3,10 +3,11 @@ from explaind.main import run
 from explaind.prompts import SYSTEM_PROMPT
 
 
-def test_dry_run_does_not_call_ollama():
-    with patch("explaind.main.ollama") as mock_ollama:
-        run("test input", dry_run=True)
-    mock_ollama.chat.assert_not_called()
+def test_dry_run_does_not_invoke_model():
+    from unittest.mock import MagicMock
+    mock_invoker = MagicMock()
+    run("test input", dry_run=True, invoker=mock_invoker)
+    mock_invoker.invoke.assert_not_called()
 
 
 def test_dry_run_usage_is_none():

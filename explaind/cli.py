@@ -3,7 +3,11 @@ import time
 import threading
 import argparse
 
-from explaind.main import run, MODEL
+from explaind.config import load_config
+from explaind.errors import ConfigError, InputError, ModelInvocationError
+from explaind.invoker import build_invoker
+from explaind.loader import load_input
+from explaind.main import run
 
 
 _FRAMES = ("⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏")
@@ -61,69 +65,50 @@ def main():
     )
     args = parser.parse_args()
 
-    if args.file:
-        try:
-            with open(args.file, "r") as f:
-                content = f.read()
-        except FileNotFoundError:
-            print(f"explaind: {args.file}: no such file", file=sys.stderr)
-            sys.exit(1)
-        except PermissionError:
-            print(f"explaind: {args.file}: permission denied", file=sys.stderr)
-            sys.exit(1)
-    elif not sys.stdin.isatty():
-        content = sys.stdin.read()
-    else:
-        print("explaind: no input provided", file=sys.stderr)
-        print("usage: explaind [file]  |  cat file | explaind  |  explaind < file", file=sys.stderr)
+    # --- input ---
+    stdin_text = None if (args.file is not None or sys.stdin.isatty()) else sys.stdin.read()
+
+    try:
+        content = load_input(file_path=args.file, stdin_text=stdin_text)
+    except InputError as e:
+        print(f"explaind: {e}", file=sys.stderr)
         sys.exit(1)
 
-    # ACCEPTANCE: empty input rejected — nothing downstream receives a blank prompt
-    if not content.strip():
-        print("explaind: input is empty", file=sys.stderr)
-        sys.exit(1)
-
-    # ACCEPTANCE: dry-run safe — prompt is assembled and printed; ollama.chat is never called
+    # --- dry-run: assemble only, no config or model needed ---
     if args.dry_run:
         try:
             result, _ = run(content, ability=args.ability, dry_run=True)
-        except Exception as e:
+        except ValueError as e:
             print(f"explaind: {e}", file=sys.stderr)
             sys.exit(1)
         print(result)
         return
 
-    # ACCEPTANCE: ability validation enforced — ValueError raised before any model call
-    # ACCEPTANCE: no silent failures — all exceptions surface as stderr + exit 1
+    # --- config + backend selection ---
+    try:
+        config = load_config()
+    except ConfigError as e:
+        print(f"explaind: {e}", file=sys.stderr)
+        sys.exit(1)
+
+    try:
+        invoker = build_invoker(config)
+    except ConfigError as e:
+        print(f"explaind: {e}", file=sys.stderr)
+        sys.exit(1)
+
+    # --- invoke ---
     try:
         with _Spinner("thinking"):
             t0 = time.monotonic()
-            result, usage = run(content, ability=args.ability)
+            result, _ = run(content, ability=args.ability, invoker=invoker)
             latency_ms = round((time.monotonic() - t0) * 1000)
     except ValueError as e:
         print(f"explaind: {e}", file=sys.stderr)
         sys.exit(1)
-    except Exception as e:
+    except ModelInvocationError as e:
         print(f"explaind: {e}", file=sys.stderr)
         sys.exit(1)
 
     print(result)
-
-    print(f"\n[model: {MODEL} · {latency_ms}ms]", file=sys.stderr)
-
-    if usage:
-        lines = ["[model usage]"]
-        if "input_tokens" in usage:
-            lines.append(f"  input tokens:  {usage['input_tokens']}")
-        if "output_tokens" in usage:
-            lines.append(f"  output tokens: {usage['output_tokens']}")
-        if "total_tokens" in usage:
-            lines.append(f"  total tokens:  {usage['total_tokens']}")
-        if "context_window" in usage:
-            used = usage.get("total_tokens", "?")
-            ctx = usage["context_window"]
-            pct = f"  {round(used / ctx * 100, 1)}%" if isinstance(used, int) else ""
-            lines.append(f"  context usage: {used} / {ctx}{pct}")
-        print("\n".join(lines), file=sys.stderr)
-    else:
-        print("  token usage: unavailable from runtime", file=sys.stderr)
+    print(f"\n[model: {config.model_name} · {latency_ms}ms]", file=sys.stderr)
