@@ -142,3 +142,7 @@ def main():
 
     if args.trace and prompt_trace is not None:
         _emit_trace(prompt_trace, config)
+
+
+if __name__ == "__main__":
+    main()

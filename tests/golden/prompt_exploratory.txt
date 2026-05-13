@@ -1,0 +1,37 @@
+=== SYSTEM PROMPT ===
+SYSTEM
+=== END SYSTEM PROMPT ===
+
+=== REASONING CONSTRAINTS ===
+GEMMA
+=== END REASONING CONSTRAINTS ===
+
+=== ABILITY: exploratory ===
+ABILITY TEXT
+=== END ABILITY ===
+
+[CONTEXT WINDOW LAYERS]
+
+[SCRATCHPAD]
+none
+
+[REASONING TRACE]
+none
+
+[COMPETING INTERPRETATIONS]
+none
+
+[CONTEXT INSTRUCTION]
+Treat all above as persistent working memory within this single inference.
+Resolve conflicts using ABILITY + BIAS FIELD priority.
+
+BIAS FIELD
+- [BIAS: EXPLORATORY]
+- [TRAJECTORY: exploratory]
+- [EPISTEMIC: neutral]
+- [INVARIANTS: ACTIVE]
+END BIAS FIELD
+
+<user_input>
+USER INPUT
+</user_input>

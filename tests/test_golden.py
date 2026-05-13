@@ -76,6 +76,42 @@ def test_golden_no_ability():
     assert "BIAS FIELD" in result
 
 
+def test_golden_causal():
+    result = assemble_prompt(
+        system="SYSTEM",
+        gemma_md="GEMMA",
+        ability=format_ability("causal", "ABILITY TEXT"),
+        context_window=_ctx(),
+        bias_field=build_bias_field("causal"),
+        user_input="USER INPUT",
+    )
+    assert result == _load("prompt_causal.txt")
+
+
+def test_golden_compressive():
+    result = assemble_prompt(
+        system="SYSTEM",
+        gemma_md="GEMMA",
+        ability=format_ability("compressive", "ABILITY TEXT"),
+        context_window=_ctx(),
+        bias_field=build_bias_field("compressive"),
+        user_input="USER INPUT",
+    )
+    assert result == _load("prompt_compressive.txt")
+
+
+def test_golden_exploratory():
+    result = assemble_prompt(
+        system="SYSTEM",
+        gemma_md="GEMMA",
+        ability=format_ability("exploratory", "ABILITY TEXT"),
+        context_window=_ctx(),
+        bias_field=build_bias_field("exploratory"),
+        user_input="USER INPUT",
+    )
+    assert result == _load("prompt_exploratory.txt")
+
+
 def test_golden_layer_order_positions():
     result = assemble_prompt(
         system="SYSTEM",
