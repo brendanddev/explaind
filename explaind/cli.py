@@ -3,11 +3,12 @@ import time
 import threading
 import argparse
 
-from explaind.config import load_config
+from explaind.config import DEFAULTS, load_config
 from explaind.errors import ConfigError, InputError, ModelInvocationError
 from explaind.invoker import build_invoker
 from explaind.loader import load_input
 from explaind.main import run
+from explaind.trace import TraceData, format_trace
 
 
 _FRAMES = ("⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏")
@@ -42,6 +43,16 @@ class _Spinner:
             print(f"\r{' ' * width}\r", end="", file=sys.stderr, flush=True)
 
 
+def _emit_trace(prompt_trace, config, file=sys.stderr) -> None:
+    td = TraceData(
+        model_name=config.model_name,
+        temperature=config.temperature,
+        max_tokens=config.max_tokens,
+        prompt=prompt_trace,
+    )
+    print(format_trace(td), file=file)
+
+
 def main():
     parser = argparse.ArgumentParser(
         prog="explaind",
@@ -63,6 +74,11 @@ def main():
         action="store_true",
         help="print assembled prompt to stdout without calling the model",
     )
+    parser.add_argument(
+        "--trace",
+        action="store_true",
+        help="print prompt-construction trace to stderr (does not affect stdout)",
+    )
     args = parser.parse_args()
 
     # --- input ---
@@ -74,14 +90,23 @@ def main():
         print(f"explaind: {e}", file=sys.stderr)
         sys.exit(1)
 
-    # --- dry-run: assemble only, no config or model needed ---
+    # --- dry-run: assemble only, no model invocation ---
     if args.dry_run:
         try:
-            result, _ = run(content, ability=args.ability, dry_run=True)
+            result, prompt_trace = run(
+                content, ability=args.ability, dry_run=True, trace=args.trace
+            )
         except ValueError as e:
             print(f"explaind: {e}", file=sys.stderr)
             sys.exit(1)
         print(result)
+        if args.trace and prompt_trace is not None:
+            # Load config for model/settings display; fall back to defaults on failure.
+            try:
+                cfg = load_config()
+            except ConfigError:
+                cfg = DEFAULTS
+            _emit_trace(prompt_trace, cfg)
         return
 
     # --- config + backend selection ---
@@ -101,7 +126,9 @@ def main():
     try:
         with _Spinner("thinking"):
             t0 = time.monotonic()
-            result, _ = run(content, ability=args.ability, invoker=invoker)
+            result, prompt_trace = run(
+                content, ability=args.ability, invoker=invoker, trace=args.trace
+            )
             latency_ms = round((time.monotonic() - t0) * 1000)
     except ValueError as e:
         print(f"explaind: {e}", file=sys.stderr)
@@ -112,3 +139,6 @@ def main():
 
     print(result)
     print(f"\n[model: {config.model_name} · {latency_ms}ms]", file=sys.stderr)
+
+    if args.trace and prompt_trace is not None:
+        _emit_trace(prompt_trace, config)

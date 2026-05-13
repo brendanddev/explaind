@@ -6,6 +6,7 @@ from explaind.context import build_context_window_block
 from explaind.gemma import load_gemma_md
 from explaind.invoker import ModelInvoker
 from explaind.prompts import SYSTEM_PROMPT, assemble_prompt, build_bias_field, format_ability
+from explaind.trace import PromptTrace
 
 ABILITIES_DIR = Path("abilities")
 
@@ -34,10 +35,12 @@ def run(
     ability: str | None = None,
     dry_run: bool = False,
     invoker: ModelInvoker | None = None,
-) -> tuple[str, None]:
+    trace: bool = False,
+) -> tuple[str, PromptTrace | None]:
     """Assemble prompt and invoke the model.
 
     invoker must be provided when dry_run=False.
+    Returns (result_text, PromptTrace) — PromptTrace is None when trace=False.
     """
     gemma_md = load_gemma_md()
 
@@ -56,10 +59,17 @@ def run(
         user_input=input_text,
     )
 
+    prompt_trace = PromptTrace(
+        gemma_present=gemma_md is not None,
+        ability_name=ability,
+        prompt_char_count=len(full_prompt),
+        user_input_length=len(input_text),
+    ) if trace else None
+
     if dry_run:
-        return full_prompt, None
+        return full_prompt, prompt_trace
 
     if invoker is None:
         raise ValueError("invoker is required when dry_run=False")
 
-    return invoker.invoke(full_prompt), None
+    return invoker.invoke(full_prompt), prompt_trace
