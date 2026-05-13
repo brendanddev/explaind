@@ -1,4 +1,5 @@
-from unittest.mock import patch
+from pathlib import Path
+
 from explaind.main import run
 from explaind.prompts import SYSTEM_PROMPT
 
@@ -39,10 +40,12 @@ def test_dry_run_contains_xml_input():
     assert "my specific input text" in result
 
 
-def test_dry_run_with_ability_contains_ability_content():
+def test_dry_run_with_ability_injects_ability_file_content():
+    ability_text = Path("abilities/skeptical.md").read_text(encoding="utf-8")
+    distinctive = "applies sustained epistemic pressure"
+    assert distinctive in ability_text
     result, _ = run("test input", ability="skeptical", dry_run=True)
-    assert "SKEPTICAL" in result
-    assert "[EPISTEMIC: skeptical]" in result
+    assert distinctive in result
 
 
 def test_dry_run_returns_string_not_none():

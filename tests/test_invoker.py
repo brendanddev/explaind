@@ -26,9 +26,10 @@ def test_build_invoker_ollama_returns_ollama_invoker():
     assert isinstance(build_invoker(cfg), OllamaInvoker)
 
 
-def test_build_invoker_llamacpp_returns_llamacpp_invoker():
+def test_build_invoker_llamacpp_raises_config_error():
     cfg = _cfg(model_backend="llamacpp")
-    assert isinstance(build_invoker(cfg), LlamaCppInvoker)
+    with pytest.raises(ConfigError, match="not yet implemented"):
+        build_invoker(cfg)
 
 
 def test_build_invoker_unknown_backend_raises():
@@ -101,7 +102,6 @@ def test_ollama_invoker_missing_response_key_raises():
 # LlamaCppInvoker
 # ---------------------------------------------------------------------------
 
-def test_llamacpp_invoker_raises_not_implemented():
-    invoker = LlamaCppInvoker(model="test", temperature=0.0, max_tokens=128)
-    with pytest.raises(ModelInvocationError, match="not yet implemented"):
-        invoker.invoke("prompt")
+def test_llamacpp_invoker_raises_config_error_at_construction():
+    with pytest.raises(ConfigError, match="not yet implemented"):
+        LlamaCppInvoker(model="test", temperature=0.0, max_tokens=128)

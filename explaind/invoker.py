@@ -47,15 +47,16 @@ class OllamaInvoker(ModelInvoker):
 
         try:
             return body["response"]
-        except KeyError:
+        except (KeyError, TypeError):
             raise ModelInvocationError("Ollama response missing 'response' field")
 
 
 class LlamaCppInvoker(ModelInvoker):
     def __init__(self, model: str, temperature: float, max_tokens: int) -> None:
-        self._model = model
-        self._temperature = temperature
-        self._max_tokens = max_tokens
+        raise ConfigError(
+            "llama.cpp backend is not yet implemented. "
+            "Set model_backend = 'ollama' in explaind.toml."
+        )
 
     def invoke(self, prompt: str) -> str:
         raise ModelInvocationError("llama.cpp backend not yet implemented")

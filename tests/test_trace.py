@@ -1,4 +1,3 @@
-import pytest
 from explaind.trace import PromptTrace, TraceData, format_trace, _ABILITY_ROLES
 
 
