@@ -53,6 +53,16 @@ def _emit_trace(prompt_trace, config, file=sys.stderr) -> None:
     print(format_trace(td), file=file)
 
 
+_COMPARE_SEP = "═══ ABILITY: {name} ═══"
+
+
+def _print_compare_block(ability: str, result: str) -> None:
+    print(_COMPARE_SEP.format(name=ability.upper()))
+    print()
+    print(result)
+    print()
+
+
 def main():
     parser = argparse.ArgumentParser(
         prog="explaind",
@@ -79,7 +89,23 @@ def main():
         action="store_true",
         help="print prompt-construction trace to stderr (does not affect stdout)",
     )
+    parser.add_argument(
+        "--compare",
+        nargs="+",
+        metavar="NAME",
+        help="run 2+ abilities on the same input and print results side by side",
+    )
     args = parser.parse_args()
+
+    # --compare and --ability are mutually exclusive
+    if args.compare and args.ability:
+        print("explaind: --compare and --ability are mutually exclusive", file=sys.stderr)
+        sys.exit(1)
+
+    # --compare requires at least 2 abilities; for a single ability use --ability
+    if args.compare and len(args.compare) < 2:
+        print("explaind: --compare requires at least 2 ability names", file=sys.stderr)
+        sys.exit(1)
 
     # --- input ---
     stdin_text = None if (args.file is not None or sys.stdin.isatty()) else sys.stdin.read()
@@ -89,6 +115,61 @@ def main():
     except InputError as e:
         print(f"explaind: {e}", file=sys.stderr)
         sys.exit(1)
+
+    # --- compare: run each ability in sequence, print with headers ---
+    if args.compare:
+        if args.dry_run:
+            try:
+                cfg = load_config()
+            except ConfigError:
+                cfg = DEFAULTS
+            for ability in args.compare:
+                try:
+                    result, prompt_trace = run(
+                        content, ability=ability, dry_run=True, trace=args.trace
+                    )
+                except ValueError as e:
+                    print(f"explaind: {e}", file=sys.stderr)
+                    sys.exit(1)
+                _print_compare_block(ability, result)
+                if args.trace and prompt_trace is not None:
+                    _emit_trace(prompt_trace, cfg)
+            return
+
+        try:
+            config = load_config()
+        except ConfigError as e:
+            print(f"explaind: {e}", file=sys.stderr)
+            sys.exit(1)
+
+        try:
+            invoker = build_invoker(config)
+        except ConfigError as e:
+            print(f"explaind: {e}", file=sys.stderr)
+            sys.exit(1)
+
+        for ability in args.compare:
+            try:
+                with _Spinner(f"thinking [{ability}]"):
+                    t0 = time.monotonic()
+                    result, prompt_trace = run(
+                        content, ability=ability, invoker=invoker, trace=args.trace
+                    )
+                    latency_ms = round((time.monotonic() - t0) * 1000)
+            except ValueError as e:
+                print(f"explaind: {e}", file=sys.stderr)
+                sys.exit(1)
+            except ModelInvocationError as e:
+                print(f"explaind: {e}", file=sys.stderr)
+                sys.exit(1)
+
+            _print_compare_block(ability, result)
+            print(f"[model: {config.model_name} · {latency_ms}ms]", file=sys.stderr)
+
+            if args.trace and prompt_trace is not None:
+                _emit_trace(prompt_trace, config)
+
+        return
 
     # --- dry-run: assemble only, no model invocation ---
     if args.dry_run:
