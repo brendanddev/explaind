@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from explaind.context import build_context_window_block
 from explaind.gemma import load_gemma_md
 from explaind.invoker import ModelInvoker
 from explaind.prompts import SYSTEM_PROMPT, assemble_prompt, build_bias_field, format_ability
@@ -43,12 +44,14 @@ def run(
     ability_content = load_ability(ability) if ability else None
     formatted_ability = format_ability(ability, ability_content) if ability_content else None
 
+    context_window = build_context_window_block()
     bias_field = build_bias_field(ability or "balanced")
 
     full_prompt = assemble_prompt(
         system=SYSTEM_PROMPT,
         gemma_md=gemma_md,
         ability=formatted_ability,
+        context_window=context_window,
         bias_field=bias_field,
         user_input=input_text,
     )

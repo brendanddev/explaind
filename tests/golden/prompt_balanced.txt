@@ -6,6 +6,21 @@ SYSTEM
 GEMMA
 === END REASONING CONSTRAINTS ===
 
+[CONTEXT WINDOW LAYERS]
+
+[SCRATCHPAD]
+none
+
+[REASONING TRACE]
+none
+
+[COMPETING INTERPRETATIONS]
+none
+
+[CONTEXT INSTRUCTION]
+Treat all above as persistent working memory within this single inference.
+Resolve conflicts using ABILITY + BIAS FIELD priority.
+
 BIAS FIELD
 - [BIAS: BALANCED]
 - [TRAJECTORY: balanced]

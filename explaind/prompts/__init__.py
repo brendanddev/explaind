@@ -82,6 +82,7 @@ def assemble_prompt(
     system: str,
     gemma_md: str | None,
     ability: str | None,
+    context_window: str,
     bias_field: str,
     user_input: str,
 ) -> str:
@@ -89,10 +90,11 @@ def assemble_prompt(
 
     Layer order (non-negotiable):
       1. system
-      2. gemma_md  (skipped when None)
-      3. ability   (skipped when None)
-      4. bias_field
-      5. user_input
+      2. gemma_md       (skipped when None)
+      3. ability        (skipped when None)
+      4. context_window
+      5. bias_field
+      6. user_input
 
     Performs no I/O, no config access, no global state reads.
     Output is byte-stable for identical inputs.
@@ -104,6 +106,8 @@ def assemble_prompt(
 
     if ability:
         layers.append(ability)
+
+    layers.append(context_window)
 
     layers.append(bias_field)
 

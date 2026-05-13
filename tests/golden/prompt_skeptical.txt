@@ -10,6 +10,21 @@ GEMMA
 ABILITY TEXT
 === END ABILITY ===
 
+[CONTEXT WINDOW LAYERS]
+
+[SCRATCHPAD]
+none
+
+[REASONING TRACE]
+none
+
+[COMPETING INTERPRETATIONS]
+none
+
+[CONTEXT INSTRUCTION]
+Treat all above as persistent working memory within this single inference.
+Resolve conflicts using ABILITY + BIAS FIELD priority.
+
 BIAS FIELD
 - [BIAS: SKEPTICAL]
 - [TRAJECTORY: skeptical]
