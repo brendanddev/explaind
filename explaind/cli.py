@@ -3,6 +3,7 @@ import time
 import threading
 import argparse
 
+from explaind.color import print_compare_header, print_error, print_model_meta
 from explaind.config import DEFAULTS, load_config
 from explaind.errors import ConfigError, InputError, ModelInvocationError
 from explaind.invoker import build_invoker
@@ -11,24 +12,38 @@ from explaind.main import run
 from explaind.trace import TraceData, format_trace
 
 
-_FRAMES = ("⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏")
-_INTERVAL = 0.1
-
-
 class _Spinner:
-    def __init__(self, message: str = "thinking") -> None:
-        self._message = message
-        self._stop = threading.Event()
-        self._thread = threading.Thread(target=self._spin, daemon=True)
-        self._active = sys.stderr.isatty()
+    _MESSAGES = [
+        (0, "thinking..."),
+        (30, "still thinking..."),
+        (60, "taking a moment..."),
+        (90, "almost there..."),
+    ]
 
-    def _spin(self) -> None:
-        i = 0
-        while not self._stop.is_set():
-            frame = _FRAMES[i % len(_FRAMES)]
-            print(f"\r{frame} {self._message}...", end="", file=sys.stderr, flush=True)
-            i += 1
-            self._stop.wait(_INTERVAL)
+    def __init__(self) -> None:
+        self._stop = threading.Event()
+        self._thread = threading.Thread(target=self._run, daemon=True)
+        self._active = sys.stdout.isatty()
+
+    def _run(self) -> None:
+        from rich.console import Console
+        from rich.status import Status
+
+        console = Console(stderr=True, highlight=False)
+        start = time.monotonic()
+        msg_idx = 0
+
+        with Status(self._MESSAGES[0][1], console=console) as status:
+            while not self._stop.is_set():
+                elapsed = time.monotonic() - start
+                new_idx = 0
+                for i, (threshold, _) in enumerate(self._MESSAGES):
+                    if elapsed >= threshold:
+                        new_idx = i
+                if new_idx != msg_idx:
+                    msg_idx = new_idx
+                    status.update(self._MESSAGES[msg_idx][1])
+                self._stop.wait(0.5)
 
     def __enter__(self):
         if self._active:
@@ -39,8 +54,6 @@ class _Spinner:
         if self._active:
             self._stop.set()
             self._thread.join()
-            width = len(self._message) + 10
-            print(f"\r{' ' * width}\r", end="", file=sys.stderr, flush=True)
 
 
 def _emit_trace(prompt_trace, config, file=sys.stderr) -> None:
@@ -51,16 +64,6 @@ def _emit_trace(prompt_trace, config, file=sys.stderr) -> None:
         prompt=prompt_trace,
     )
     print(format_trace(td), file=file)
-
-
-_COMPARE_SEP = "═══ ABILITY: {name} ═══"
-
-
-def _print_compare_block(ability: str, result: str) -> None:
-    print(_COMPARE_SEP.format(name=ability.upper()))
-    print()
-    print(result)
-    print()
 
 
 def main():
@@ -99,12 +102,12 @@ def main():
 
     # --compare and --ability are mutually exclusive
     if args.compare and args.ability:
-        print("explaind: --compare and --ability are mutually exclusive", file=sys.stderr)
+        print_error("explaind: --compare and --ability are mutually exclusive")
         sys.exit(1)
 
     # --compare requires at least 2 abilities; for a single ability use --ability
     if args.compare and len(args.compare) < 2:
-        print("explaind: --compare requires at least 2 ability names", file=sys.stderr)
+        print_error("explaind: --compare requires at least 2 ability names")
         sys.exit(1)
 
     # --- input ---
@@ -113,7 +116,7 @@ def main():
     try:
         content = load_input(file_path=args.file, stdin_text=stdin_text)
     except InputError as e:
-        print(f"explaind: {e}", file=sys.stderr)
+        print_error(f"explaind: {e}")
         sys.exit(1)
 
     # --- compare: run each ability in sequence, print with headers ---
@@ -129,9 +132,12 @@ def main():
                         content, ability=ability, dry_run=True, trace=args.trace
                     )
                 except ValueError as e:
-                    print(f"explaind: {e}", file=sys.stderr)
+                    print_error(f"explaind: {e}")
                     sys.exit(1)
-                _print_compare_block(ability, result)
+                print_compare_header(ability)
+                print()
+                print(result)
+                print()
                 if args.trace and prompt_trace is not None:
                     _emit_trace(prompt_trace, cfg)
             return
@@ -139,32 +145,35 @@ def main():
         try:
             config = load_config()
         except ConfigError as e:
-            print(f"explaind: {e}", file=sys.stderr)
+            print_error(f"explaind: {e}")
             sys.exit(1)
 
         try:
             invoker = build_invoker(config)
         except ConfigError as e:
-            print(f"explaind: {e}", file=sys.stderr)
+            print_error(f"explaind: {e}")
             sys.exit(1)
 
         for ability in args.compare:
             try:
-                with _Spinner(f"thinking [{ability}]"):
+                with _Spinner():
                     t0 = time.monotonic()
                     result, prompt_trace = run(
                         content, ability=ability, invoker=invoker, trace=args.trace
                     )
                     latency_ms = round((time.monotonic() - t0) * 1000)
             except ValueError as e:
-                print(f"explaind: {e}", file=sys.stderr)
+                print_error(f"explaind: {e}")
                 sys.exit(1)
             except ModelInvocationError as e:
-                print(f"explaind: {e}", file=sys.stderr)
+                print_error(f"explaind: {e}")
                 sys.exit(1)
 
-            _print_compare_block(ability, result)
-            print(f"[model: {config.model_name} · {latency_ms}ms]", file=sys.stderr)
+            print_compare_header(ability)
+            print()
+            print(result)
+            print()
+            print_model_meta(f"[model: {config.model_name} · {latency_ms}ms]")
 
             if args.trace and prompt_trace is not None:
                 _emit_trace(prompt_trace, config)
@@ -178,11 +187,10 @@ def main():
                 content, ability=args.ability, dry_run=True, trace=args.trace
             )
         except ValueError as e:
-            print(f"explaind: {e}", file=sys.stderr)
+            print_error(f"explaind: {e}")
             sys.exit(1)
         print(result)
         if args.trace and prompt_trace is not None:
-            # Load config for model/settings display; fall back to defaults on failure.
             try:
                 cfg = load_config()
             except ConfigError:
@@ -194,32 +202,33 @@ def main():
     try:
         config = load_config()
     except ConfigError as e:
-        print(f"explaind: {e}", file=sys.stderr)
+        print_error(f"explaind: {e}")
         sys.exit(1)
 
     try:
         invoker = build_invoker(config)
     except ConfigError as e:
-        print(f"explaind: {e}", file=sys.stderr)
+        print_error(f"explaind: {e}")
         sys.exit(1)
 
     # --- invoke ---
     try:
-        with _Spinner("thinking"):
+        with _Spinner():
             t0 = time.monotonic()
             result, prompt_trace = run(
                 content, ability=args.ability, invoker=invoker, trace=args.trace
             )
             latency_ms = round((time.monotonic() - t0) * 1000)
     except ValueError as e:
-        print(f"explaind: {e}", file=sys.stderr)
+        print_error(f"explaind: {e}")
         sys.exit(1)
     except ModelInvocationError as e:
-        print(f"explaind: {e}", file=sys.stderr)
+        print_error(f"explaind: {e}")
         sys.exit(1)
 
     print(result)
-    print(f"\n[model: {config.model_name} · {latency_ms}ms]", file=sys.stderr)
+    print("", file=sys.stderr)
+    print_model_meta(f"[model: {config.model_name} · {latency_ms}ms]")
 
     if args.trace and prompt_trace is not None:
         _emit_trace(prompt_trace, config)

@@ -1,30 +1,46 @@
 # exploratory — Expansion and Synthesis
 
-This ability applies outward pressure to the reasoning process. It biases the model toward expanding the possibility space before converging — holding multiple interpretations open longer, following lateral connections, and surfacing relationships that are not immediately visible in the input structure.
+The question is a starting point. Do not answer it. Depart from it.
 
-It is not a brainstorming instruction. It is a pressure against premature closure.
+Exploratory reasoning does not produce more thorough answers to the question as asked. It produces adjacent questions, minority framings, and unexpected angles that the question's own structure forecloses. The goal is not coverage — it is discovery. If the output reads like a comprehensive answer, it has failed.
 
 ---
 
+## Primary directive: pursue the non-obvious first
+
+Do not begin by mapping what is standard. Begin by asking what has not been said, what the question's framing excludes, and what a minority position would need to assume to be correct.
+
+The default reasoning trajectory identifies and covers known explanatory categories. This ability inverts that priority: the first move is toward the heterodox, the underexplored, and the angle the question itself does not invite. Known categories are the last thing to reach, not the first.
+
+## Against completeness
+
+A complete answer closes the question. An exploratory answer opens it.
+
+Resist the impulse to cover ground. Resist the impulse to synthesize threads into a final view. Resist the move from "here are several perspectives" to "here is what they amount to."
+
+If the output could serve as a final answer to the question, it is not exploratory — it is comprehensive, which is the wrong register entirely. The output should end with more open directions than it began with, not fewer.
+
 ## Amplifies:
 
-- Alternative hypotheses that are consistent with the available evidence
-- Lateral connections between signals that appear structurally unrelated
-- Implicit assumptions in the input that, if changed, would produce a different reading
-- Underspecified regions of the problem that may contain relevant signal
-- Second-order effects and non-obvious consequences
+- Minority positions, heterodox framings, and non-consensus explanations — not as alternatives to note, but as primary lenses to pursue
+- Angles the question's own framing actively discourages or forecloses
+- Framings that dissolve, restate, or reframe the question rather than answering it
+- Questions the answer to the original question would raise — follow those instead
+- What would have to be true for a surprising or counterintuitive answer to be correct
+- Lateral connections to adjacent domains that recontextualize the question entirely
 
 ## Suppresses:
 
-- Single-path convergence on the most obvious or most available interpretation
-- Early commitment to a framing before the possibility space is mapped
-- Treating the first viable explanation as the complete explanation
-- Discarding minority interpretations without examining what they explain
+- Comprehensive cataloguing of the standard explanatory categories
+- Convergence on any conclusion — treating the question as a problem to be closed
+- Synthesis that resolves open threads rather than extending them
+- The assumption that the question's implicit framing is the correct framing to work within
+- Outputs that a thorough, well-read person could have generated from the question alone
 
 ## Reasoning effect:
 
-The reasoning process is held in an expansive state longer than the default. Before any interpretation is committed to, the model surveys the adjacent possibility space: what else could explain this, what assumptions does the current reading depend on, what would change if one of those assumptions were false?
+The reasoning process begins by treating the question as an artifact: something constructed with particular assumptions that is worth examining before being answered. Those assumptions determine what the question can see — and therefore what it cannot.
 
-Convergence is deferred until the expansion phase has produced a set of candidates. The final reasoning output reflects which interpretation survived scrutiny across the expanded space, not just which one was most immediately available.
+From there, the reasoning pursues one or two genuinely unexpected angles deeply rather than cataloguing many conventional ones shallowly. It follows the less-travelled path: the minority position, the reframing that dissolves the original question, the lateral connection that puts the whole thing in a different light.
 
-This ability is most effective when the input is underspecified, ambiguous, or when the apparent reading may be a surface pattern masking a different underlying structure.
+The output is generative rather than comprehensive. It produces directions for further inquiry rather than summaries of existing knowledge. It does not converge. It does not arrive at a view. It leaves the reader with more to think about than they started with — not because it covered more ground, but because it opened ground that wasn't visible from the question.
