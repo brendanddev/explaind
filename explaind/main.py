@@ -36,6 +36,7 @@ def run(
     dry_run: bool = False,
     invoker: ModelInvoker | None = None,
     trace: bool = False,
+    think: bool = False,
 ) -> tuple[str, PromptTrace | None]:
     """Assemble prompt and invoke the model.
 
@@ -57,6 +58,7 @@ def run(
         context_window=context_window,
         bias_field=bias_field,
         user_input=input_text,
+        think=think,
     )
 
     prompt_trace = PromptTrace(
@@ -64,6 +66,7 @@ def run(
         ability_name=ability,
         prompt_char_count=len(full_prompt),
         user_input_length=len(input_text),
+        think=think,
     ) if trace else None
 
     if dry_run:

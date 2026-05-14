@@ -17,6 +17,7 @@ class PromptTrace:
     ability_name: str | None
     prompt_char_count: int
     user_input_length: int
+    think: bool = False
 
 
 @dataclass(frozen=True)
@@ -54,6 +55,7 @@ def format_trace(data: TraceData) -> str:
         "CONTEXT WINDOW LAYERS: present",
         f"BIAS FIELD: {bias_name}",
         f"USER INPUT: {pt.user_input_length} chars",
+        *( ["THINKING MODE: enabled"] if pt.think else [] ),
         "",
         "[PROMPT SIZE]",
         f"{pt.prompt_char_count} chars",

@@ -3,7 +3,7 @@ import time
 import threading
 import argparse
 
-from explaind.color import print_compare_header, print_error, print_model_meta
+from explaind.color import print_compare_header, print_error, print_model_meta, print_model_output
 from explaind.config import DEFAULTS, load_config
 from explaind.errors import ConfigError, InputError, ModelInvocationError
 from explaind.invoker import build_invoker
@@ -98,6 +98,11 @@ def main():
         metavar="NAME",
         help="run 2+ abilities on the same input and print results side by side",
     )
+    parser.add_argument(
+        "--think",
+        action="store_true",
+        help="enables Gemma 4 native thinking mode for deeper chain-of-thought reasoning",
+    )
     args = parser.parse_args()
 
     # --compare and --ability are mutually exclusive
@@ -129,7 +134,7 @@ def main():
             for ability in args.compare:
                 try:
                     result, prompt_trace = run(
-                        content, ability=ability, dry_run=True, trace=args.trace
+                        content, ability=ability, dry_run=True, trace=args.trace, think=args.think
                     )
                 except ValueError as e:
                     print_error(f"explaind: {e}")
@@ -159,7 +164,7 @@ def main():
                 with _Spinner():
                     t0 = time.monotonic()
                     result, prompt_trace = run(
-                        content, ability=ability, invoker=invoker, trace=args.trace
+                        content, ability=ability, invoker=invoker, trace=args.trace, think=args.think
                     )
                     latency_ms = round((time.monotonic() - t0) * 1000)
             except ValueError as e:
@@ -171,7 +176,7 @@ def main():
 
             print_compare_header(ability)
             print()
-            print(result)
+            print_model_output(result)
             print()
             print_model_meta(f"[model: {config.model_name} · {latency_ms}ms]")
 
@@ -184,7 +189,7 @@ def main():
     if args.dry_run:
         try:
             result, prompt_trace = run(
-                content, ability=args.ability, dry_run=True, trace=args.trace
+                content, ability=args.ability, dry_run=True, trace=args.trace, think=args.think
             )
         except ValueError as e:
             print_error(f"explaind: {e}")
@@ -216,7 +221,7 @@ def main():
         with _Spinner():
             t0 = time.monotonic()
             result, prompt_trace = run(
-                content, ability=args.ability, invoker=invoker, trace=args.trace
+                content, ability=args.ability, invoker=invoker, trace=args.trace, think=args.think
             )
             latency_ms = round((time.monotonic() - t0) * 1000)
     except ValueError as e:
@@ -226,7 +231,7 @@ def main():
         print_error(f"explaind: {e}")
         sys.exit(1)
 
-    print(result)
+    print_model_output(result)
     print("", file=sys.stderr)
     print_model_meta(f"[model: {config.model_name} · {latency_ms}ms]")
 

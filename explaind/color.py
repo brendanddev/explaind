@@ -48,3 +48,13 @@ def print_error(text: str) -> None:
 
 def print_warning(text: str) -> None:
     _stderr_console().print(text, style="yellow", markup=False)
+
+
+def print_model_output(text: str) -> None:
+    from rich.markdown import Markdown
+
+    console = _stdout_console()
+    if console.is_terminal:
+        console.print(Markdown(text))
+    else:
+        print(text)

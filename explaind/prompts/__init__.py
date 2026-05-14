@@ -85,6 +85,7 @@ def assemble_prompt(
     context_window: str,
     bias_field: str,
     user_input: str,
+    think: bool = False,
 ) -> str:
     """Pure function. Assembles the full prompt in strict layer order.
 
@@ -99,7 +100,8 @@ def assemble_prompt(
     Performs no I/O, no config access, no global state reads.
     Output is byte-stable for identical inputs.
     """
-    layers: list[str] = [_SYSTEM_TEMPLATE.format(content=system)]
+    system_content = system + "\n<|think|>" if think else system
+    layers: list[str] = [_SYSTEM_TEMPLATE.format(content=system_content)]
 
     if gemma_md:
         layers.append(_GEMMA_TEMPLATE.format(gemma_md=gemma_md.strip()))

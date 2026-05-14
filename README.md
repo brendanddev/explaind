@@ -61,6 +61,7 @@ Current flags:
 - `--ability NAME` loads one of the whitelisted ability files from `abilities/`
 - `--dry-run` prints the fully assembled prompt and skips model invocation
 - `--trace` prints a prompt-construction trace to stderr (layer names, sizes, model settings); can be combined with `--dry-run`
+- `--think` enables Gemma 4 native thinking mode for deeper chain-of-thought reasoning
 
 Accepted ability names:
 
