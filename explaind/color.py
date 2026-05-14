@@ -99,3 +99,94 @@ def print_export_confirmation(path: str) -> None:
         console.print(f"exported → {path}", style="dim green", markup=False)
     else:
         print(f"exported → {path}", file=sys.stderr)
+
+
+def print_honest_header() -> None:
+    from rich.box import SQUARE
+    from rich.panel import Panel
+
+    console = _stdout_console()
+    if not console.is_terminal:
+        print("[explaind · honest mode]")
+        return
+
+    t = Text()
+    t.append("explaind", style="bold")
+    t.append("  ·  honest mode", style="dim")
+    console.print(Panel(t, box=SQUARE, padding=(0, 2)))
+
+
+def print_honest_separator(label: str) -> None:
+    from rich.rule import Rule
+
+    console = _stdout_console()
+    if not console.is_terminal:
+        print(f"\n── {label} ──\n")
+        return
+
+    console.print()
+    console.print(Rule(f" {label} ", style="dim"))
+    console.print()
+
+
+def print_honest_meta(model_name: str, ms1: int, ms2: int) -> None:
+    from rich.rule import Rule
+
+    console = _stderr_console()
+    footer_text = f"{model_name} · {ms1}ms + {ms2}ms · honest"
+    if console.is_terminal:
+        console.print(Rule(style="dim"))
+        console.print(f"  {footer_text}", style="dim", markup=False)
+    else:
+        console.print(footer_text, style="dim", markup=False)
+
+
+def print_chain_header(abilities: list[str]) -> None:
+    from rich.box import SQUARE
+    from rich.panel import Panel
+
+    chain_str = " → ".join(abilities)
+    console = _stdout_console()
+
+    if not console.is_terminal:
+        print(f"[explaind · chain: {chain_str}]")
+        return
+
+    t = Text()
+    t.append("explaind", style="bold")
+    if len(abilities) >= 4:
+        first_line = " → ".join(abilities[:2])
+        rest_line = " → ".join(abilities[2:])
+        t.append(f"  ·  chain: {first_line}", style="dim")
+        t.append(f"\n             → {rest_line}", style="dim")
+    else:
+        t.append(f"  ·  chain: {chain_str}", style="dim")
+    console.print(Panel(t, box=SQUARE, padding=(0, 2)))
+
+
+def print_chain_separator(ability: str, pass_num: int) -> None:
+    from rich.rule import Rule
+
+    console = _stdout_console()
+    label = f" Pass {pass_num}: {ability} "
+
+    if not console.is_terminal:
+        print(f"\n── Pass {pass_num}: {ability} ──\n")
+        return
+
+    console.print()
+    console.print(Rule(label, style="dim"))
+    console.print()
+
+
+def print_chain_meta(model: str, times: list[int]) -> None:
+    from rich.rule import Rule
+
+    console = _stderr_console()
+    times_str = " + ".join(f"{ms}ms" for ms in times)
+    footer_text = f"{model} · {times_str} · chain"
+    if console.is_terminal:
+        console.print(Rule(style="dim"))
+        console.print(f"  {footer_text}", style="dim", markup=False)
+    else:
+        console.print(footer_text, style="dim", markup=False)

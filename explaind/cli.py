@@ -6,15 +6,37 @@ import argparse
 from datetime import datetime
 from pathlib import Path
 
-from explaind.color import print_compare_header, print_error, print_export_confirmation, print_model_meta, print_model_output, print_run_header, print_warning
+from explaind.color import print_chain_header, print_chain_meta, print_chain_separator, print_compare_header, print_error, print_export_confirmation, print_honest_header, print_honest_meta, print_honest_separator, print_model_meta, print_model_output, print_run_header, print_warning
 from explaind.exporter import build_export
 from explaind.config import DEFAULTS, load_config
 from explaind.errors import ConfigError, InputError, ModelInvocationError
 from explaind.invoker import build_invoker
 from explaind.loader import load_context, load_input, load_scratchpad
-from explaind.main import run
+from explaind.main import ALLOWED_ABILITIES, run
 from explaind.presets import PRESET_MAP, load_preset, preset_description
 from explaind.trace import TraceData, format_trace
+
+
+_CHAIN_SCRATCHPAD_LIMIT = 8000
+
+
+def _chain_handoff_header(prev_ability: str, next_ability: str) -> str:
+    return (
+        f"[REASONING HANDOFF: {prev_ability} → {next_ability}]\n"
+        f"The following is output from the {prev_ability} reasoning pass.\n"
+        f"Apply {next_ability} reasoning to this material.\n"
+        f"Do not summarise the previous pass — transform it.\n"
+        f"Your full ability specification applies to this handoff."
+    )
+
+
+_INITIAL_RESPONSE_HEADER = """\
+[INITIAL RESPONSE — under review]
+The following is a first-pass response to the question.
+Apply full epistemic pressure. Interrogate every claim.
+Surface assumptions. Identify where confidence outruns
+evidence. Do not summarise — critique.\
+"""
 
 
 class _Spinner:
@@ -150,6 +172,17 @@ def main():
         metavar="FILE",
         help="save reasoning output to a Markdown file (default: explaind_YYYYMMDD_HHMMSS.md)",
     )
+    parser.add_argument(
+        "--honest",
+        action="store_true",
+        help="two-pass mode: balanced first, then skeptical critique of the initial response",
+    )
+    parser.add_argument(
+        "--chain",
+        nargs="+",
+        metavar="NAME",
+        help="run abilities in sequence, each pass feeding its output as scratchpad to the next",
+    )
     args = parser.parse_args()
 
     export_path: str | None = None
@@ -183,6 +216,28 @@ def main():
     # --compare requires at least 2 abilities; for a single ability use --ability
     if args.compare and len(args.compare) < 2:
         print_error("explaind: --compare requires at least 2 ability names")
+        sys.exit(1)
+
+    # --honest is mutually exclusive with --compare and --preset
+    if args.honest and args.compare:
+        print_error("explaind: --honest and --compare are mutually exclusive")
+        sys.exit(1)
+    if args.honest and args.preset:
+        print_error("explaind: --honest and --preset are mutually exclusive")
+        sys.exit(1)
+
+    # --chain is mutually exclusive with --ability, --compare, --preset, --honest
+    if args.chain and args.ability:
+        print_error("explaind: --chain and --ability are mutually exclusive")
+        sys.exit(1)
+    if args.chain and args.compare:
+        print_error("explaind: --chain and --compare are mutually exclusive")
+        sys.exit(1)
+    if args.chain and args.preset:
+        print_error("explaind: --chain and --preset are mutually exclusive")
+        sys.exit(1)
+    if args.chain and args.honest:
+        print_error("explaind: --chain and --honest are mutually exclusive")
         sys.exit(1)
 
     # resolve preset -> ability_name
@@ -221,6 +276,280 @@ def main():
         except InputError as e:
             print_error(f"explaind: {e}")
             sys.exit(1)
+
+    # --- honest: two-pass balanced → skeptical self-critique ---
+    if args.honest:
+        if args.dry_run:
+            try:
+                cfg = load_config()
+            except ConfigError:
+                cfg = DEFAULTS
+
+            try:
+                result1, trace1 = run(
+                    content,
+                    ability="balanced",
+                    dry_run=True,
+                    trace=args.trace,
+                    think=args.think,
+                    scratchpad=scratchpad_content,
+                    context=context_content,
+                )
+            except ValueError as e:
+                print_error(f"explaind: {e}")
+                sys.exit(1)
+            print(result1)
+            if args.trace and trace1 is not None:
+                _emit_trace(trace1, cfg)
+
+            print()
+            print("--- [honest mode: pass 2 (skeptical)] ---")
+            print()
+
+            pass2_scratchpad = _INITIAL_RESPONSE_HEADER
+            if scratchpad_content:
+                pass2_scratchpad = scratchpad_content + "\n\n" + _INITIAL_RESPONSE_HEADER
+
+            try:
+                result2, trace2 = run(
+                    content,
+                    ability="skeptical",
+                    dry_run=True,
+                    trace=args.trace,
+                    think=args.think,
+                    scratchpad=pass2_scratchpad,
+                    context=context_content,
+                )
+            except ValueError as e:
+                print_error(f"explaind: {e}")
+                sys.exit(1)
+            print(result2)
+            if args.trace and trace2 is not None:
+                _emit_trace(trace2, cfg)
+
+            return
+
+        try:
+            config = load_config()
+        except ConfigError as e:
+            print_error(f"explaind: {e}")
+            sys.exit(1)
+
+        try:
+            invoker = build_invoker(config)
+        except ConfigError as e:
+            print_error(f"explaind: {e}")
+            sys.exit(1)
+
+        try:
+            with _Spinner():
+                t0 = time.monotonic()
+                result1, trace1 = run(
+                    content,
+                    ability="balanced",
+                    invoker=invoker,
+                    trace=args.trace,
+                    think=args.think,
+                    scratchpad=scratchpad_content,
+                    context=context_content,
+                )
+                ms1 = round((time.monotonic() - t0) * 1000)
+        except ValueError as e:
+            print_error(f"explaind: {e}")
+            sys.exit(1)
+        except ModelInvocationError as e:
+            print_error(f"explaind: {e}")
+            sys.exit(1)
+
+        pass2_scratchpad = _INITIAL_RESPONSE_HEADER + "\n\n" + result1
+        if scratchpad_content:
+            pass2_scratchpad = scratchpad_content + "\n\n" + _INITIAL_RESPONSE_HEADER + "\n\n" + result1
+
+        try:
+            with _Spinner():
+                t0 = time.monotonic()
+                result2, trace2 = run(
+                    content,
+                    ability="skeptical",
+                    invoker=invoker,
+                    trace=args.trace,
+                    think=args.think,
+                    scratchpad=pass2_scratchpad,
+                    context=context_content,
+                )
+                ms2 = round((time.monotonic() - t0) * 1000)
+        except ValueError as e:
+            print_error(f"explaind: {e}")
+            sys.exit(1)
+        except ModelInvocationError as e:
+            print_error(f"explaind: {e}")
+            sys.exit(1)
+
+        print_honest_header()
+        print_honest_separator("Initial Response")
+        print_model_output(result1)
+        print_honest_separator("Self-Critique")
+        print_model_output(result2)
+        print_honest_meta(config.model_name, ms1, ms2)
+
+        if args.trace and trace1 is not None:
+            _emit_trace(trace1, config)
+        if args.trace and trace2 is not None:
+            _emit_trace(trace2, config)
+
+        if export_path:
+            _write_export(
+                content,
+                [
+                    {"ability": "balanced", "label": "Initial Response", "preset": None, "output": result1, "duration_ms": ms1},
+                    {"ability": "skeptical", "label": "Self-Critique", "preset": None, "output": result2, "duration_ms": ms2},
+                ],
+                config.model_name,
+                args.think,
+                export_path,
+            )
+
+        return
+
+    # --- chain: sequential ability pipeline ---
+    if args.chain:
+        if len(args.chain) < 2:
+            print_error("explaind: --chain requires at least 2 ability names")
+            sys.exit(1)
+
+        for name in args.chain:
+            if name not in ALLOWED_ABILITIES:
+                allowed = ", ".join(sorted(ALLOWED_ABILITIES))
+                print_error(f"explaind: unknown ability '{name}' in --chain (allowed: {allowed})")
+                sys.exit(1)
+
+        if args.dry_run:
+            try:
+                cfg = load_config()
+            except ConfigError:
+                cfg = DEFAULTS
+
+            for i, ability in enumerate(args.chain):
+                pass_num = i + 1
+
+                if i == 0:
+                    sp = scratchpad_content
+                else:
+                    handoff = _chain_handoff_header(args.chain[i - 1], ability)
+                    sp = handoff
+                    if i == 1 and scratchpad_content:
+                        sp = scratchpad_content + "\n\n" + handoff
+
+                try:
+                    result, trace = run(
+                        content,
+                        ability=ability,
+                        dry_run=True,
+                        trace=args.trace,
+                        think=args.think,
+                        scratchpad=sp,
+                        context=context_content,
+                    )
+                except ValueError as e:
+                    print_error(f"explaind: {e}")
+                    sys.exit(1)
+
+                print()
+                print(f"--- [chain: pass {pass_num} ({ability})] ---")
+                print()
+                print(result)
+
+                if args.trace and trace is not None:
+                    _emit_trace(trace, cfg)
+
+            return
+
+        try:
+            config = load_config()
+        except ConfigError as e:
+            print_error(f"explaind: {e}")
+            sys.exit(1)
+
+        try:
+            invoker = build_invoker(config)
+        except ConfigError as e:
+            print_error(f"explaind: {e}")
+            sys.exit(1)
+
+        chain_results: list[tuple[str, str, int, object]] = []
+        prev_output: str | None = None
+
+        for i, ability in enumerate(args.chain):
+            pass_num = i + 1
+
+            if i == 0:
+                sp = scratchpad_content
+            else:
+                handoff = _chain_handoff_header(args.chain[i - 1], ability)
+                handoff_content = handoff + "\n\n" + (prev_output or "")
+
+                if len(handoff_content) > _CHAIN_SCRATCHPAD_LIMIT:
+                    print_warning(
+                        f"explaind: scratchpad truncated to {_CHAIN_SCRATCHPAD_LIMIT} chars for pass {pass_num}"
+                    )
+                    handoff_content = handoff_content[-_CHAIN_SCRATCHPAD_LIMIT:]
+
+                if i == 1 and scratchpad_content:
+                    sp = scratchpad_content + "\n\n" + handoff_content
+                else:
+                    sp = handoff_content
+
+            try:
+                with _Spinner():
+                    t0 = time.monotonic()
+                    result, trace = run(
+                        content,
+                        ability=ability,
+                        invoker=invoker,
+                        trace=args.trace,
+                        think=args.think,
+                        scratchpad=sp,
+                        context=context_content,
+                    )
+                    ms = round((time.monotonic() - t0) * 1000)
+            except ValueError as e:
+                print_error(f"explaind: {e}")
+                sys.exit(1)
+            except ModelInvocationError as e:
+                print_error(f"explaind: {e}")
+                sys.exit(1)
+
+            prev_output = result
+            chain_results.append((ability, result, ms, trace))
+
+        print_chain_header(args.chain)
+        for i, (ability, result, ms, trace) in enumerate(chain_results):
+            print_chain_separator(ability, i + 1)
+            print_model_output(result)
+            if args.trace and trace is not None:
+                _emit_trace(trace, config)
+
+        print_chain_meta(config.model_name, [ms for _, _, ms, _ in chain_results])
+
+        if export_path:
+            _write_export(
+                content,
+                [
+                    {
+                        "label": f"Pass {i + 1}: {ability}",
+                        "ability": ability,
+                        "preset": None,
+                        "output": result,
+                        "duration_ms": ms,
+                    }
+                    for i, (ability, result, ms, _) in enumerate(chain_results)
+                ],
+                config.model_name,
+                args.think,
+                export_path,
+            )
+
+        return
 
     # --- compare: run each ability in sequence, print with headers ---
     if args.compare:

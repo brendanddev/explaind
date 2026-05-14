@@ -36,7 +36,10 @@ def build_export(
         lines.append("---")
         lines.append("")
 
-        if preset:
+        label = run.get("label")
+        if label:
+            lines.append(f"## {label}")
+        elif preset:
             lines.append(f"## Preset: {preset.title()}")
         else:
             lines.append(f"## Ability: {ability.title()}")

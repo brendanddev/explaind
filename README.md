@@ -207,6 +207,27 @@ The parser in `explaind/cli.py` exposes the following interface today.
 | `--preset NAME` | Loads a named reasoning preset, selecting the mapped ability and injecting a `[PRESET: NAME]` marker into the bias field. Mutually exclusive with `--ability` and `--compare`. | `echo "Why did this fail?" \| explaind --preset engineer` |
 | `--list-presets` | Prints all available presets with their mapped ability and one-line description, then exits. | `explaind --list-presets` |
 | `--export [FILE]` | Saves reasoning output to a Markdown file after the run. If a filename is given, writes to that path. If omitted, generates a timestamped filename (`explaind_YYYYMMDD_HHMMSS.md`). Works with `--ability`, `--compare`, `--preset`, and `--think`. The exported file includes a blank **Summary Notes** section for user annotation. | `echo "What causes inflation?" \| explaind --compare skeptical causal --export chain.md` |
+| `--honest` | Two-pass honest mode: runs balanced first, then applies skeptical critique to the initial response. Surfaces where Gemma 4's confidence outruns its evidence. Mutually exclusive with `--compare` and `--preset`. Works with `--think`, `--scratchpad`, `--context`, `--export`, `--dry-run`, and `--trace`. | `echo "What causes inflation?" \| explaind --honest` |
+| `--chain NAME [NAME ...]` | Sequential ability pipeline: each ability runs in order, and each pass feeds its output as scratchpad input to the next. Each pass transforms the previous output rather than answering the original question fresh. Mutually exclusive with `--ability`, `--compare`, `--preset`, and `--honest`. Requires at least 2 ability names. | `echo "What caused the 2008 financial crisis?" \| explaind --chain causal compressive skeptical` |
+
+### `--chain` usage
+
+Each pass receives the previous pass's output as scratchpad input. The first pass sees the original user input (and any user-supplied `--scratchpad`). Pass 2 onwards receive a structured `[REASONING HANDOFF]` block that names the incoming and outgoing ability, the previous output, and an instruction to transform rather than summarise. Scratchpad content is truncated to 8000 characters per pass to prevent context window overflow on long chains.
+
+```bash
+echo "What caused the 2008 financial crisis?" | explaind --chain causal compressive skeptical
+echo "Evaluate this argument" | explaind --chain exploratory balanced compressive --export chain.md
+explaind --chain causal skeptical --dry-run "What is the hard problem of consciousness?"
+```
+
+### `--honest` usage
+
+```bash
+echo "What causes inflation?" | explaind --honest
+echo "Is consciousness an illusion?" | explaind --honest --think
+explaind --honest --scratchpad notes.md --export review.md "Evaluate this argument"
+explaind --honest --dry-run "What is the hard problem of consciousness?"
+```
 
 Both `--scratchpad` and `--context` are optional and can be combined with each other and with `--ability`, `--compare`, `--think`, and `--dry-run`:
 
