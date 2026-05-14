@@ -3,7 +3,7 @@ import time
 import threading
 import argparse
 
-from explaind.color import print_compare_header, print_error, print_model_meta, print_model_output
+from explaind.color import print_compare_header, print_error, print_model_meta, print_model_output, print_run_header
 from explaind.config import DEFAULTS, load_config
 from explaind.errors import ConfigError, InputError, ModelInvocationError
 from explaind.invoker import build_invoker
@@ -174,11 +174,9 @@ def main():
                 print_error(f"explaind: {e}")
                 sys.exit(1)
 
-            print_compare_header(ability)
-            print()
+            print_run_header(ability, args.think)
             print_model_output(result)
-            print()
-            print_model_meta(f"[model: {config.model_name} · {latency_ms}ms]")
+            print_model_meta(config.model_name, latency_ms, ability=ability)
 
             if args.trace and prompt_trace is not None:
                 _emit_trace(prompt_trace, config)
@@ -231,9 +229,9 @@ def main():
         print_error(f"explaind: {e}")
         sys.exit(1)
 
+    print_run_header(args.ability or "balanced", args.think)
     print_model_output(result)
-    print("", file=sys.stderr)
-    print_model_meta(f"[model: {config.model_name} · {latency_ms}ms]")
+    print_model_meta(config.model_name, latency_ms, ability=args.ability or "balanced")
 
     if args.trace and prompt_trace is not None:
         _emit_trace(prompt_trace, config)
