@@ -53,6 +53,9 @@ _TRAJECTORY_MAP: dict[str, str] = {
     "causal": "causal",
     "compressive": "compressive",
     "exploratory": "exploratory",
+    "calibrator": "calibrator",
+    "devil": "devil",
+    "updater": "updater",
 }
 
 _EPISTEMIC_MAP: dict[str, str] = {

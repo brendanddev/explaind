@@ -16,6 +16,9 @@ ALLOWED_ABILITIES = {
     "causal",
     "compressive",
     "exploratory",
+    "calibrator",
+    "devil",
+    "updater",
 }
 
 

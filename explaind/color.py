@@ -9,6 +9,9 @@ _ABILITY_COLORS = {
     "compressive": "bold yellow",
     "exploratory": "bold magenta",
     "balanced": "bold cyan",
+    "calibrator": "bold green",
+    "devil": "bold bright_red",
+    "updater": "bold bright_cyan",
 }
 
 

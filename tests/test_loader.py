@@ -27,12 +27,15 @@ def test_all_allowed_abilities_load():
         assert len(content) > 0
 
 
-def test_allowed_abilities_set_contains_five():
-    assert len(ALLOWED_ABILITIES) == 5
+def test_allowed_abilities_set_contains_eight():
+    assert len(ALLOWED_ABILITIES) == 8
 
 
 def test_allowed_abilities_set_contents():
-    assert ALLOWED_ABILITIES == {"balanced", "skeptical", "causal", "compressive", "exploratory"}
+    assert ALLOWED_ABILITIES == {
+        "balanced", "skeptical", "causal", "compressive", "exploratory",
+        "calibrator", "devil", "updater",
+    }
 
 
 def test_empty_string_is_not_a_valid_ability():
