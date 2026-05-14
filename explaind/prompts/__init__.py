@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from explaind.context import build_context_window_block
+
 LAYER_SEPARATOR = "\n\n"
 
 SYSTEM_PROMPT = """\
@@ -86,6 +88,8 @@ def assemble_prompt(
     bias_field: str,
     user_input: str,
     think: bool = False,
+    scratchpad: str | None = None,
+    context: str | None = None,
 ) -> str:
     """Pure function. Assembles the full prompt in strict layer order.
 
@@ -97,9 +101,15 @@ def assemble_prompt(
       5. bias_field
       6. user_input
 
+    When scratchpad or context are provided, the context_window is rebuilt
+    with that content injected. Otherwise context_window is used as-is.
+
     Performs no I/O, no config access, no global state reads.
     Output is byte-stable for identical inputs.
     """
+    if scratchpad is not None or context is not None:
+        context_window = build_context_window_block(scratchpad=scratchpad, context=context)
+
     system_content = system + "\n<|think|>" if think else system
     layers: list[str] = [_SYSTEM_TEMPLATE.format(content=system_content)]
 

@@ -1,21 +1,21 @@
 # explaind
 
-`explaind` is a local-first cognitive steering layer for Gemma 4 and a submission for the Gemma 4 DEV Challenge.
+`explaind` is a local-first cognitive steering layer for Gemma 4 and a submission for the **Gemma 4 DEV Challenge**.
 
 It is not an agent, not a chatbot wrapper, and not a RAG system. It is a deterministic prompt harness that biases Gemma 4's reasoning trajectory by assembling a fixed stack of instruction layers, invariants, context scaffolding, and an ability-specific bias field before a single model call.
 
-The core claim of the project is simple: for Gemma, prompt structure is nopresentation polish. It is control surface. If the model is sensitive to framing, ordering, recency, and harness design, then those properties should be treated as first-class software, not ad hoc prompt text.
+The core claim of the project is simple: for **Gemma 4**, prompt structure is not presentation polish. It is control surface. If the model is sensitive to framing, ordering, recency, and harness design, then those properties should be treated as first-class software, not ad hoc prompt text.
 
 ---
 
 ## What explaind is
 
-`explaind` treats Gemma 4 as a stochastic reasoning engine whose behavior can be steered without fine-tuning. The software does not patch model weghts, maintain memory, run tl loops, or build an autonomous workflow around the midel. It performs one deterministic prompt assembly, sends that prompt to a local backend, and returns the model output.
+`explaind` treats **Gemma 4** as a stochastic reasoning engine whose behavior can be steered without fine-tuning. The software does not patch model weights, maintain memory, run tool loops, or build an autonomous workflow around the model. It performs one deterministic prompt assembly, sends that prompt to a local backend, and returns the model output.
 
 In the current codebase, that means:
 
 - input from stdin or a positional file path
--  whitelist-based loading of one of five ability files
+- whitelist-based loading of one of five ability files
 - deterministic prompt construction with fixed layer ordering
 - a runtime `BIAS FIELD` injected immediately before user input
 - an always-present `CONTEXT WINDOW LAYERS` block
@@ -24,13 +24,13 @@ In the current codebase, that means:
 
 This is prompt physics, not agent orchestration.
 
-## Why it exists
+---
 
-Gemma 4 is unusually explicit about prompt structure and model-specific controls. The official model card documents native `system` support, configurable thinking mode via the `<|think|>` token, and long-context operation up to 128K or 256K tokens depending on model size. Independent evaluation also shows that prompting protocol materially changes outcome quality: a recent benchmark measured Gemma 4 under zero-shot, chain-of-thought, and few-shot chain-of-thought settings and dound meaningful prompt sensitivity across tasks. Separately, Georgi Gerganov's March 30, 2026 observation on localmodel quality captured the operational reality.... the harness, chat template, and prompt-construction chain are often the fragile part.
+## Why It Exists
 
-That is the design premise behind `explaind`. Behavior improves significantly with inference tweaks and custom harnesses; raw chat use ezxposes more flaws. So instead of pretending the harness is incidental, `explaind` makes the harness the product.
+Gemma 4 is unusually explicit about prompt structure and model-specific controls. The official model card documents native `system` support, configurable thinking mode via the `<|think|>` token, and long-context operation up to 128K or 256K tokens depending on model size. Independent evaluation also shows that prompting protocol materially changes outcome quality: a recent benchmark measured Gemma 4 under zero-shot, chain-of-thought, and few-shot chain-of-thought settings and found meaningful prompt sensitivity across tasks. Separately, Georgi Gerganov's March 30, 2026 observation on local-model quality captured the operational reality: the harness, chat template, and prompt-construction chain are often the fragile part.
 
-
+That is the design premise behind `explaind`. Behavior improves significantly with inference tweaks and custom harnesses; raw chat use exposes more flaws. So instead of pretending the harness is incidental, `explaind` makes the harness the product.
 
 The table below maps observed or commonly reported Gemma 4 failure patterns to the current design response in this repository:
 
@@ -45,9 +45,11 @@ The table below maps observed or commonly reported Gemma 4 failure patterns to t
 Two implementation notes matter here:
 
 - Scratchpad-style context injection is now available via `--scratchpad` and `--context` flags, which fill the `[SCRATCHPAD]` and `[REFERENCE CONTEXT]` fields in the context window block.
-- The original project spec mentions `--file`. The current implementation uses a positional `file` argument instead.
+- `--file PATH` is now implemented as an alternative to the positional file argument. Both are accepted; `--file` takes precedence when both are provided.
 
-## How it works
+---
+
+## How It Works
 
 Conceptually, `explaind` is built around a five-layer steering stack:
 
@@ -65,7 +67,7 @@ The system layer defines the base role: a reasoning assistant that responds clea
 
 ### 2. GEMMA.md
 
-`GEMMA.md` is the invariant reasoning layer. It tells the model what it must not do: hallucinate facts, collapse uncertainty, conflate obervation with inference, or silently invent missing context. This layer is static. It is not memory, not fine-tuning, and not session state. It is the stable constraint surface inside the prompt stack.
+`GEMMA.md` is the invariant reasoning layer. It tells the model what it must not do: hallucinate facts, collapse uncertainty, conflate observation with inference, or silently invent missing context. This layer is static. It is not memory, not fine-tuning, and not session state. It is the stable constraint surface inside the prompt stack.
 
 ### 3. ABILITY
 
@@ -73,10 +75,10 @@ An ability is a reasoning bias vector loaded from `abilities/<name>.md`. It does
 
 ### 4. CONTEXT WINDOW LAYERS
 
-This block is a concrete implemenation detail of the current repository, not just a future idea. It always appears in the assembled prompt and contains:
+This block is a concrete implementation detail of the current repository, not just a future idea. It always appears in the assembled prompt and contains:
 
 - `[SCRATCHPAD]`
-- `[REASONING TRACE]
+- `[REASONING TRACE]`
 - `[COMPETING INTERPRETATIONS]`
 - `[CONTEXT INSTRUCTION]`
 
@@ -103,9 +105,9 @@ The final layer is the raw user content wrapped in XML-style tags:
 </user_input>
 ```
 
-Placing the user iput last ensures every prior layer is in scope when the model reaches the task itself.
+Placing the user input last ensures every prior layer is in scope when the model reaches the task itself.
 
-### Why the ordering matters
+### Why The Ordering Matters
 
 The order is not cosmetic.
 
@@ -116,11 +118,14 @@ The order is not cosmetic.
 - `BIAS FIELD` appears late because redundant signal injection near the tail is a deliberate defense against instruction dilution.
 - `USER INPUT` comes last because it is the object the entire stack is meant to shape.
 
-## The five abilities
+---
+
+## The Five Abilities
 
 ### `balanced`
 
-`balanced` is the neutral prior. It applies no directional pressure and attempts to weight available evidence evenly. Use it when the task does not clearly call for skepticism, causal tracing, compression, or exploratory synthesis, or whem you want the cleanest baseline before comparing other trajectories.
+`balanced` is the neutral prior. It applies no directional pressure and attempts to weight available evidence evenly. Use it when the task does not clearly call for skepticism, causal tracing, compression, or exploratory synthesis, or when you want the cleanest baseline before comparing other trajectories.
+
 ### `skeptical`
 
 `skeptical` replaces default explanation with examination. It interrogates the framing of the question itself, pressures unsupported claims, and treats consensus as something to justify rather than inherit. Use it when the biggest risk is overconfident reasoning, causal handwaving, or quietly accepting the user's premises without inspecting them first.
@@ -137,7 +142,9 @@ The order is not cosmetic.
 
 `exploratory` is the opposite of closure. It pushes the model toward heterodox framings, underexplored questions, and reframings that the original prompt may exclude. Use it when the task is synthesis, hypothesis generation, or conceptual expansion rather than convergence on a final answer.
 
-## CLI surface
+---
+
+## CLI Surface
 
 The parser in `explaind/cli.py` exposes the following interface today.
 
@@ -151,8 +158,9 @@ The parser in `explaind/cli.py` exposes the following interface today.
 | `--think` | Injects Gemma 4's thinking token into the system layer before prompt assembly. | `echo "Trace the argument" \| explaind --think` |
 | `--dry-run` | Prints the fully assembled prompt to stdout and skips model invocation. | `echo "Explain this output" \| explaind --dry-run` |
 | `--trace` | Prints a prompt-construction trace to stderr, including model settings and prompt size. | `echo "Explain this output" \| explaind --trace --dry-run` |
+| `--file PATH` | Reads input from a file path. Equivalent to the positional argument — use whichever form is more ergonomic. `--file` takes precedence when both are supplied. | `explaind --file logs/error.txt --ability causal` |
 | `--scratchpad FILE` | Injects a markdown file as active working memory into the `[SCRATCHPAD]` field of the context window. Use for hypotheses, partial reasoning, or working notes. Forces Gemma 4 to reason from this content rather than defaulting to parametric knowledge. | `explaind --ability causal --scratchpad hypothesis.md "What should we conclude?"` |
-| `--context FILE` | Injects a a markdown file as reference material into the context window. Use for prior outputs, background documents, or domain-specific material. Instructs the model to prefer this content over general knowledge where they conflict. | `explaind --scratchpad hypothesis.md --context prior_analysis.md "What should we conclude?"` |
+| `--context FILE` | Injects a markdown file as reference material into the context window. Use for prior outputs, background documents, or domain-specific material. Instructs the model to prefer this content over general knowledge where they conflict. | `explaind --scratchpad hypothesis.md --context prior_analysis.md "What should we conclude?"` |
 
 Both `--scratchpad` and `--context` are optional and can be combined with each other and with `--ability`, `--compare`, `--think`, and `--dry-run`:
 
@@ -163,16 +171,9 @@ explaind --ability causal \
          "What should we conclude?"
 ```
 
-### Mentioned in the original spec, but not implemented in the current parser
-
-| Interface | Current status | Current equivalent |
-|---|---|---|
-| `--file` | Not implementedsd | Use the positional `file` argument: `explaind path/to/input.txt` |
-| `--version` | Not implemented | The package version is currently `0.6.2` in `pyproject.toml` |
-
 ### Behavioral details worth knowing
 
-- `-compare` requires at least two ability names.
+- `--compare` requires at least two ability names.
 - `--compare` and `--ability` are mutually exclusive.
 - `--dry-run` never invokes the model backend.
 - `--trace` can be combined with `--dry-run` or regular execution.
@@ -185,7 +186,7 @@ The following was observed on May 13, 2026 using the current default config:
 
 - backend: `ollama`
 - model: `gemma4-e2b_q4_k_m:latest`
-prompt: `What causes inflation?`
+- prompt: `What causes inflation?`
 
 Command:
 
@@ -197,21 +198,25 @@ What changed across the three runs was not the question. It was the reasoning pr
 
 | Ability | Observed output shape |
 |---|---|
-| `skeptical` | Opened by challenging the framing of the question itself, arguing that inflation is not a single unified phenomenon and thathe question smuggles in assumptions about coherence, causality, and definition stability. |
+| `skeptical` | Opened by challenging the framing of the question itself, arguing that inflation is not a single unified phenomenon and that the question smuggles in assumptions about coherence, causality, and definition stability. |
 | `causal` | Reorganized the answer into explicit causal chains, separating demand-pull, cost-push, and expectation-driven mechanisms and tracing each from root condition to effect. |
 | `compressive` | Collapsed the explanation to two dominant mechanisms, demand-pull and cost-push, and ended with a short summary instead of extended qualification. |
 
 The stable point is visible immediately: `skeptical` interrogates assumptions, `causal` traces mechanisms, and `compressive` strips the answer down to the load-bearing structure. Exact phrasing will still vary with model build, quantization, and inference stack.
 
+---
+
 ## `--think` and Gemma 4 thinking mode
 
 Gemma 4 exposes a model-specific thinking mode rather than relying on generic chain-of-thought prompting conventions. The official model card documents a native `<|think|>` token and a corresponding thought channel in the model's output format. That matters because `explaind` is explicitly designed around Gemma 4's actual control surface, not around generic "LLMs like to reason step by step" assumptions.
 
-In the current implementation, `--think` injects `<|think|>` into the system prompt block before the rest of the layers are assembled. Testsconfirm that the token appears inside the system layer and upstream of the bias field and user input. In practical terms, `explaind` treats thinking mode as a first-class model capability that can be toggled deterministically and inspected with `--dry-run` and `--trace`.
+In the current implementation, `--think` injects `<|think|>` into the system prompt block before the rest of the layers are assembled. Tests confirm that the token appears inside the system layer and upstream of the bias field and user input. In practical terms, `explaind` treats thinking mode as a first-class model capability that can be toggled deterministically and inspected with `--dry-run` and `--trace`.
 
-This is intentionally Gemma 4-specific. If the model exposes a native reasoning control token, the harness should use the tokrn the model was built to understand.
+This is intentionally Gemma 4-specific. If the model exposes a native reasoning control token, the harness should use the token the model was built to understand.
 
-## Installation and setup
+---
+
+## Installation and Setup
 
 ### Requirements
 
@@ -248,13 +253,15 @@ temperature = 0.0
 Current config behavior:
 
 - missing config file falls back to defaults
-- unknow keys raise `ConfigError`
+- unknown keys raise `ConfigError`
 - `model_backend` must be `ollama` or `llamacpp`
 - `llamacpp` is parsed successfully but execution is not implemented yet
 - `temperature` must be between `0.0` and `2.0`
 - `max_tokens` must be a positive integer
 
-## Repository layout
+---
+
+## Repository Layout
 
 The current repository layout is:
 
@@ -285,9 +292,11 @@ explaind/
 └── tests/
 ```
 
-One namng detail is worth making explicit: the prompt assembler currently lives in `explaind/prompts/__init__.py`. There is no standalone `assembler.py` module in the present codebase.
+One naming detail is worth making explicit: the prompt assembler currently lives in `explaind/prompts/__init__.py`. There is no standalone `assembler.py` module in the present codebase.
 
-## Current status
+---
+
+## Current Status
 
 What is implemented today:
 
@@ -304,23 +313,25 @@ What is implemented today:
 
 What is not implemented today:
 
-- a standalone `--file` flag
 - a `--version` flag
-- CLI-level scratchpad injection
-- llama.cppexecution backend
+- llama.cpp execution backend
 - agent loops
 - tool use
 - retrieval or memory
 
-## Design philosophy
+---
 
-`explaind` is stateless on purpose. Each invocation is a fresh reasoning trajectory. The project assumes that if you want reliable steerinng, the cleanest baseline is to remove hidden carry-over state and make the full control surface inspectable inside a single prompt. This keeps the system analyzable and makes prompt diffs meaningful.
+## Design Philosophy
 
-It also refuses the usual local-LLM move of wrapping everything in an agent. That is not because Gemma 4 lacks useful capabilities. The Gemma 4 model card explicitly exposes system prompts, thinking mode, and function-calling support. The point here is narower: local agent stacks add another fragile layer of tool formating, planner logic, and orchesttration behaviour on top of an already prompt sensitive model. A one shot harness makes it easier to isolate prompt evel steering effects and see what the prompt itself is doing.
+`explaind` is stateless on purpose. Each invocation is a fresh reasoning trajectory. The project assumes that if you want reliable steering, the cleanest baseline is to remove hidden carry-over state and make the full control surface inspectable inside a single prompt. This keeps the system analyzable and makes prompt diffs meaningful.
 
-The redundant `BIAS FIELD` exists because instruction following is not binary. A model can understand a direction early in the prompt and still drft later under long-context pressure, user wording, or flattening toward a generic assistant style. Reasserting the active trajeectory imediately before the task is therefore a deliberate recency hack, not duplication by accident.
+It also refuses the usual local-LLM move of wrapping everything in an agent. That is not because Gemma 4 lacks useful capabilities. The Gemma 4 model card explicitly exposes system prompts, thinking mode, and function-calling support. The point here is narrower: local agent stacks add another fragile layer of tool formatting, planner logic, and orchestration behavior on top of an already prompt-sensitive model. A one-shot harness makes it easier to isolate prompt-level steering effects and see what the prompt itself is doing.
 
-Finally, `explaind` treats Gemma 4 as stochastic and only partially instruction-following by design. That is a realistic stance for open weight local models. The right response is not to pretend the model is deterministic if prompted politely enough. The right response is to build a harness that constrains variance, makes reasoning pressure legible, and exposes the exact prompt that produced the output.
+The redundant `BIAS FIELD` exists because instruction following is not binary. A model can understand a direction early in the prompt and still drift later under long-context pressure, user wording, or flattening toward a generic assistant style. Reasserting the active trajectory immediately before the task is therefore a deliberate recency hack, not duplication by accident.
+
+Finally, `explaind` treats Gemma 4 as stochastic and only partially instruction-following by design. That is a realistic stance for open-weight local models. The right response is not to pretend the model is deterministic if prompted politely enough. The right response is to build a harness that constrains variance, makes reasoning pressure legible, and exposes the exact prompt that produced the output.
+
+---
 
 ## References
 

@@ -3,11 +3,13 @@ import time
 import threading
 import argparse
 
+from pathlib import Path
+
 from explaind.color import print_compare_header, print_error, print_model_meta, print_model_output, print_run_header
 from explaind.config import DEFAULTS, load_config
 from explaind.errors import ConfigError, InputError, ModelInvocationError
 from explaind.invoker import build_invoker
-from explaind.loader import load_input
+from explaind.loader import load_context, load_input, load_scratchpad
 from explaind.main import run
 from explaind.trace import TraceData, format_trace
 
@@ -103,6 +105,22 @@ def main():
         action="store_true",
         help="enables Gemma 4 native thinking mode for deeper chain-of-thought reasoning",
     )
+    parser.add_argument(
+        "--file",
+        metavar="PATH",
+        dest="file_flag",
+        help="path to input file (alternative to positional file argument)",
+    )
+    parser.add_argument(
+        "--scratchpad",
+        metavar="FILE",
+        help="path to a markdown file containing active working notes or hypotheses",
+    )
+    parser.add_argument(
+        "--context",
+        metavar="FILE",
+        help="path to a markdown file containing background material or prior outputs",
+    )
     args = parser.parse_args()
 
     # --compare and --ability are mutually exclusive
@@ -116,13 +134,32 @@ def main():
         sys.exit(1)
 
     # --- input ---
-    stdin_text = None if (args.file is not None or sys.stdin.isatty()) else sys.stdin.read()
+    file_arg = args.file_flag if args.file_flag is not None else args.file
+    stdin_text = None if (file_arg is not None or sys.stdin.isatty()) else sys.stdin.read()
 
     try:
-        content = load_input(file_path=args.file, stdin_text=stdin_text)
+        content = load_input(file_path=file_arg, stdin_text=stdin_text)
     except InputError as e:
         print_error(f"explaind: {e}")
         sys.exit(1)
+
+    # --- optional context injection ---
+    scratchpad_content: str | None = None
+    context_content: str | None = None
+
+    if args.scratchpad:
+        try:
+            scratchpad_content = load_scratchpad(Path(args.scratchpad))
+        except InputError as e:
+            print_error(f"explaind: {e}")
+            sys.exit(1)
+
+    if args.context:
+        try:
+            context_content = load_context(Path(args.context))
+        except InputError as e:
+            print_error(f"explaind: {e}")
+            sys.exit(1)
 
     # --- compare: run each ability in sequence, print with headers ---
     if args.compare:
@@ -134,7 +171,13 @@ def main():
             for ability in args.compare:
                 try:
                     result, prompt_trace = run(
-                        content, ability=ability, dry_run=True, trace=args.trace, think=args.think
+                        content,
+                        ability=ability,
+                        dry_run=True,
+                        trace=args.trace,
+                        think=args.think,
+                        scratchpad=scratchpad_content,
+                        context=context_content,
                     )
                 except ValueError as e:
                     print_error(f"explaind: {e}")
@@ -164,7 +207,13 @@ def main():
                 with _Spinner():
                     t0 = time.monotonic()
                     result, prompt_trace = run(
-                        content, ability=ability, invoker=invoker, trace=args.trace, think=args.think
+                        content,
+                        ability=ability,
+                        invoker=invoker,
+                        trace=args.trace,
+                        think=args.think,
+                        scratchpad=scratchpad_content,
+                        context=context_content,
                     )
                     latency_ms = round((time.monotonic() - t0) * 1000)
             except ValueError as e:
@@ -187,7 +236,13 @@ def main():
     if args.dry_run:
         try:
             result, prompt_trace = run(
-                content, ability=args.ability, dry_run=True, trace=args.trace, think=args.think
+                content,
+                ability=args.ability,
+                dry_run=True,
+                trace=args.trace,
+                think=args.think,
+                scratchpad=scratchpad_content,
+                context=context_content,
             )
         except ValueError as e:
             print_error(f"explaind: {e}")
@@ -219,7 +274,13 @@ def main():
         with _Spinner():
             t0 = time.monotonic()
             result, prompt_trace = run(
-                content, ability=args.ability, invoker=invoker, trace=args.trace, think=args.think
+                content,
+                ability=args.ability,
+                invoker=invoker,
+                trace=args.trace,
+                think=args.think,
+                scratchpad=scratchpad_content,
+                context=context_content,
             )
             latency_ms = round((time.monotonic() - t0) * 1000)
     except ValueError as e:

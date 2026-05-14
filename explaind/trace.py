@@ -18,6 +18,8 @@ class PromptTrace:
     prompt_char_count: int
     user_input_length: int
     think: bool = False
+    scratchpad_len: int | None = None
+    context_len: int | None = None
 
 
 @dataclass(frozen=True)
@@ -55,6 +57,8 @@ def format_trace(data: TraceData) -> str:
         "CONTEXT WINDOW LAYERS: present",
         f"BIAS FIELD: {bias_name}",
         f"USER INPUT: {pt.user_input_length} chars",
+        f"SCRATCHPAD: {pt.scratchpad_len} chars" if pt.scratchpad_len is not None else "SCRATCHPAD: none",
+        f"CONTEXT: {pt.context_len} chars" if pt.context_len is not None else "CONTEXT: none",
         *( ["THINKING MODE: enabled"] if pt.think else [] ),
         "",
         "[PROMPT SIZE]",

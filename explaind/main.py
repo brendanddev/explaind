@@ -37,11 +37,14 @@ def run(
     invoker: ModelInvoker | None = None,
     trace: bool = False,
     think: bool = False,
+    scratchpad: str | None = None,
+    context: str | None = None,
 ) -> tuple[str, PromptTrace | None]:
     """Assemble prompt and invoke the model.
 
     invoker must be provided when dry_run=False.
     Returns (result_text, PromptTrace) — PromptTrace is None when trace=False.
+    scratchpad and context, when provided, are injected into the context window.
     """
     gemma_md = load_gemma_md()
 
@@ -59,6 +62,8 @@ def run(
         bias_field=bias_field,
         user_input=input_text,
         think=think,
+        scratchpad=scratchpad,
+        context=context,
     )
 
     prompt_trace = PromptTrace(
@@ -67,6 +72,8 @@ def run(
         prompt_char_count=len(full_prompt),
         user_input_length=len(input_text),
         think=think,
+        scratchpad_len=len(scratchpad) if scratchpad is not None else None,
+        context_len=len(context) if context is not None else None,
     ) if trace else None
 
     if dry_run:
