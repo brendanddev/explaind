@@ -39,12 +39,14 @@ def run(
     think: bool = False,
     scratchpad: str | None = None,
     context: str | None = None,
+    preset_name: str | None = None,
 ) -> tuple[str, PromptTrace | None]:
     """Assemble prompt and invoke the model.
 
     invoker must be provided when dry_run=False.
     Returns (result_text, PromptTrace) — PromptTrace is None when trace=False.
     scratchpad and context, when provided, are injected into the context window.
+    preset_name, when provided, adds a [PRESET: NAME] marker to the bias field.
     """
     gemma_md = load_gemma_md()
 
@@ -52,7 +54,7 @@ def run(
     formatted_ability = format_ability(ability, ability_content) if ability_content else None
 
     context_window = build_context_window_block()
-    bias_field = build_bias_field(ability or "balanced")
+    bias_field = build_bias_field(ability or "balanced", preset_name=preset_name)
 
     full_prompt = assemble_prompt(
         system=SYSTEM_PROMPT,

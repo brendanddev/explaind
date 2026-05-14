@@ -30,21 +30,29 @@ def print_compare_header(ability_name: str) -> None:
     _stdout_console().print(t)
 
 
-def print_run_header(ability: str, think: bool) -> None:
+def print_run_header(ability: str, think: bool, preset: str | None = None) -> None:
     from rich.box import SQUARE
     from rich.panel import Panel
 
     console = _stdout_console()
     if not console.is_terminal:
         think_suffix = " · think" if think else ""
-        print(f"[explaind · ability: {ability}{think_suffix}]")
+        if preset:
+            print(f"[explaind · preset: {preset} ({ability}){think_suffix}]")
+        else:
+            print(f"[explaind · ability: {ability}{think_suffix}]")
         return
 
     color = _ABILITY_COLORS.get(ability.lower(), "bold white")
     t = Text()
     t.append("explaind", style="bold")
-    t.append("  ·  ability: ", style="dim")
-    t.append(ability, style=color)
+    if preset:
+        t.append("  ·  preset: ", style="dim")
+        t.append(preset, style=color)
+        t.append(f" ({ability})", style="dim")
+    else:
+        t.append("  ·  ability: ", style="dim")
+        t.append(ability, style=color)
     if think:
         t.append("  · think", style="dim")
     console.print(Panel(t, box=SQUARE, padding=(0, 2)))
@@ -83,3 +91,11 @@ def print_model_output(text: str) -> None:
         console.print(Markdown(text))
     else:
         print(text)
+
+
+def print_export_confirmation(path: str) -> None:
+    console = _stderr_console()
+    if console.is_terminal:
+        console.print(f"exported → {path}", style="dim green", markup=False)
+    else:
+        print(f"exported → {path}", file=sys.stderr)

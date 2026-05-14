@@ -3,14 +3,17 @@ import time
 import threading
 import argparse
 
+from datetime import datetime
 from pathlib import Path
 
-from explaind.color import print_compare_header, print_error, print_model_meta, print_model_output, print_run_header
+from explaind.color import print_compare_header, print_error, print_export_confirmation, print_model_meta, print_model_output, print_run_header, print_warning
+from explaind.exporter import build_export
 from explaind.config import DEFAULTS, load_config
 from explaind.errors import ConfigError, InputError, ModelInvocationError
 from explaind.invoker import build_invoker
 from explaind.loader import load_context, load_input, load_scratchpad
 from explaind.main import run
+from explaind.presets import PRESET_MAP, load_preset, preset_description
 from explaind.trace import TraceData, format_trace
 
 
@@ -68,6 +71,15 @@ def _emit_trace(prompt_trace, config, file=sys.stderr) -> None:
     print(format_trace(td), file=file)
 
 
+def _write_export(question: str, runs: list[dict], model: str, think: bool, path: str) -> None:
+    md = build_export(question, runs, model, think)
+    try:
+        Path(path).write_text(md, encoding="utf-8")
+        print_export_confirmation(path)
+    except OSError as e:
+        print_warning(f"explaind: export failed: {e}")
+
+
 def main():
     parser = argparse.ArgumentParser(
         prog="explaind",
@@ -121,7 +133,47 @@ def main():
         metavar="FILE",
         help="path to a markdown file containing background material or prior outputs",
     )
+    parser.add_argument(
+        "--preset",
+        metavar="NAME",
+        help="load a named reasoning preset (mutually exclusive with --ability and --compare)",
+    )
+    parser.add_argument(
+        "--list-presets",
+        action="store_true",
+        help="print available presets with their mapped ability and description, then exit",
+    )
+    parser.add_argument(
+        "--export",
+        nargs="?",
+        const=True,
+        metavar="FILE",
+        help="save reasoning output to a Markdown file (default: explaind_YYYYMMDD_HHMMSS.md)",
+    )
     args = parser.parse_args()
+
+    export_path: str | None = None
+    if args.export is True:
+        export_path = datetime.now().strftime("explaind_%Y%m%d_%H%M%S.md")
+    elif args.export:
+        export_path = args.export
+
+    # --list-presets: print and exit immediately, no input required
+    if args.list_presets:
+        name_w = max(len(n) for n in PRESET_MAP) + 2
+        ability_w = max(len(a) for a in PRESET_MAP.values()) + 2
+        for name, ability in PRESET_MAP.items():
+            desc = preset_description(name)
+            print(f"{name:<{name_w}} →  {ability:<{ability_w}} {desc}")
+        sys.exit(0)
+
+    # --preset, --ability, --compare are mutually exclusive
+    if args.preset and args.ability:
+        print_error("explaind: --preset and --ability are mutually exclusive")
+        sys.exit(1)
+    if args.preset and args.compare:
+        print_error("explaind: --preset and --compare are mutually exclusive")
+        sys.exit(1)
 
     # --compare and --ability are mutually exclusive
     if args.compare and args.ability:
@@ -132,6 +184,15 @@ def main():
     if args.compare and len(args.compare) < 2:
         print_error("explaind: --compare requires at least 2 ability names")
         sys.exit(1)
+
+    # resolve preset -> ability_name
+    preset_ability: str | None = None
+    if args.preset:
+        try:
+            preset_ability, _ = load_preset(args.preset)
+        except ValueError as e:
+            print_error(f"explaind: {e}")
+            sys.exit(1)
 
     # --- input ---
     file_arg = args.file_flag if args.file_flag is not None else args.file
@@ -202,6 +263,7 @@ def main():
             print_error(f"explaind: {e}")
             sys.exit(1)
 
+        compare_runs: list[dict] = []
         for ability in args.compare:
             try:
                 with _Spinner():
@@ -230,19 +292,28 @@ def main():
             if args.trace and prompt_trace is not None:
                 _emit_trace(prompt_trace, config)
 
+            compare_runs.append({"ability": ability, "preset": None, "output": result, "duration_ms": latency_ms})
+
+        if export_path:
+            _write_export(content, compare_runs, config.model_name, args.think, export_path)
+
         return
+
+    # effective ability: preset-mapped name takes precedence over --ability
+    effective_ability = preset_ability if args.preset else args.ability
 
     # --- dry-run: assemble only, no model invocation ---
     if args.dry_run:
         try:
             result, prompt_trace = run(
                 content,
-                ability=args.ability,
+                ability=effective_ability,
                 dry_run=True,
                 trace=args.trace,
                 think=args.think,
                 scratchpad=scratchpad_content,
                 context=context_content,
+                preset_name=args.preset,
             )
         except ValueError as e:
             print_error(f"explaind: {e}")
@@ -275,12 +346,13 @@ def main():
             t0 = time.monotonic()
             result, prompt_trace = run(
                 content,
-                ability=args.ability,
+                ability=effective_ability,
                 invoker=invoker,
                 trace=args.trace,
                 think=args.think,
                 scratchpad=scratchpad_content,
                 context=context_content,
+                preset_name=args.preset,
             )
             latency_ms = round((time.monotonic() - t0) * 1000)
     except ValueError as e:
@@ -290,12 +362,21 @@ def main():
         print_error(f"explaind: {e}")
         sys.exit(1)
 
-    print_run_header(args.ability or "balanced", args.think)
+    print_run_header(effective_ability or "balanced", args.think, preset=args.preset)
     print_model_output(result)
-    print_model_meta(config.model_name, latency_ms, ability=args.ability or "balanced")
+    print_model_meta(config.model_name, latency_ms, ability=effective_ability or "balanced")
 
     if args.trace and prompt_trace is not None:
         _emit_trace(prompt_trace, config)
+
+    if export_path:
+        _write_export(
+            content,
+            [{"ability": effective_ability or "balanced", "preset": args.preset, "output": result, "duration_ms": latency_ms}],
+            config.model_name,
+            args.think,
+            export_path,
+        )
 
 
 if __name__ == "__main__":

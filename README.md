@@ -120,6 +120,49 @@ The order is not cosmetic.
 
 ---
 
+## Presets
+
+Presets are named reasoning personalities that map to a curated ability and bias configuration. They are a higher-level interface on top of abilities — use them when the task calls for a recognisable reasoning posture rather than a raw ability name.
+
+| Preset | Maps to | Description |
+|---|---|---|
+| `philosopher` | `exploratory` | Examines foundational assumptions, resists closure, pursues depth over resolution |
+| `engineer` | `causal` | Traces mechanisms and root causes; treats every problem as a system |
+| `critic` | `skeptical` | Applies maximum epistemic pressure; default posture is interrogation |
+| `synthesiser` | `balanced` | Holds competing frameworks simultaneously, seeks integration |
+| `analyst` | `compressive` | Strips elaboration, targets signal; output is dense by design |
+| `strategist` | `causal` | Maps causal terrain for leverage points and second-order effects |
+
+### Usage
+
+```bash
+echo "Is consciousness an illusion?" | explaind --preset philosopher
+echo "Why did this service fail?" | explaind --preset engineer --dry-run
+echo "What are the assumptions here?" | explaind --preset critic
+explaind --preset analyst --scratchpad notes.md "Summarise the key finding"
+```
+
+### Listing presets
+
+```bash
+explaind --list-presets
+```
+
+Output:
+
+```
+philosopher  →  exploratory   Examines foundations, resists closure
+engineer     →  causal        Traces mechanisms and root causes
+critic       →  skeptical     Applies maximum epistemic pressure
+synthesiser  →  balanced      Integrates competing frameworks
+analyst      →  compressive   Strips elaboration, targets signal
+strategist   →  causal        Maps leverage points and trajectories
+```
+
+`--preset` is mutually exclusive with `--ability` and `--compare`. All other flags (`--think`, `--scratchpad`, `--context`, `--dry-run`, `--trace`) work with `--preset`.
+
+---
+
 ## The Five Abilities
 
 ### `balanced`
@@ -161,6 +204,9 @@ The parser in `explaind/cli.py` exposes the following interface today.
 | `--file PATH` | Reads input from a file path. Equivalent to the positional argument — use whichever form is more ergonomic. `--file` takes precedence when both are supplied. | `explaind --file logs/error.txt --ability causal` |
 | `--scratchpad FILE` | Injects a markdown file as active working memory into the `[SCRATCHPAD]` field of the context window. Use for hypotheses, partial reasoning, or working notes. Forces Gemma 4 to reason from this content rather than defaulting to parametric knowledge. | `explaind --ability causal --scratchpad hypothesis.md "What should we conclude?"` |
 | `--context FILE` | Injects a markdown file as reference material into the context window. Use for prior outputs, background documents, or domain-specific material. Instructs the model to prefer this content over general knowledge where they conflict. | `explaind --scratchpad hypothesis.md --context prior_analysis.md "What should we conclude?"` |
+| `--preset NAME` | Loads a named reasoning preset, selecting the mapped ability and injecting a `[PRESET: NAME]` marker into the bias field. Mutually exclusive with `--ability` and `--compare`. | `echo "Why did this fail?" \| explaind --preset engineer` |
+| `--list-presets` | Prints all available presets with their mapped ability and one-line description, then exits. | `explaind --list-presets` |
+| `--export [FILE]` | Saves reasoning output to a Markdown file after the run. If a filename is given, writes to that path. If omitted, generates a timestamped filename (`explaind_YYYYMMDD_HHMMSS.md`). Works with `--ability`, `--compare`, `--preset`, and `--think`. The exported file includes a blank **Summary Notes** section for user annotation. | `echo "What causes inflation?" \| explaind --compare skeptical causal --export chain.md` |
 
 Both `--scratchpad` and `--context` are optional and can be combined with each other and with `--ability`, `--compare`, `--think`, and `--dry-run`:
 

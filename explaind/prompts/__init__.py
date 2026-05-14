@@ -65,19 +65,22 @@ def format_ability(name: str, content: str) -> str:
     return _ABILITY_TEMPLATE.format(name=name, content=content.strip())
 
 
-def build_bias_field(ability_name: str) -> str:
+def build_bias_field(ability_name: str, preset_name: str | None = None) -> str:
     """Return a deterministic BIAS FIELD block derived from ability name alone."""
     name = ability_name.lower()
     trajectory = _TRAJECTORY_MAP.get(name, "balanced")
     epistemic = _EPISTEMIC_MAP.get(name, "neutral")
-    return (
-        f"BIAS FIELD\n"
-        f"- [BIAS: {name.upper()}]\n"
-        f"- [TRAJECTORY: {trajectory}]\n"
-        f"- [EPISTEMIC: {epistemic}]\n"
-        f"- [INVARIANTS: ACTIVE]\n"
-        f"END BIAS FIELD"
-    )
+    lines = [
+        "BIAS FIELD",
+        f"- [BIAS: {name.upper()}]",
+        f"- [TRAJECTORY: {trajectory}]",
+        f"- [EPISTEMIC: {epistemic}]",
+        "- [INVARIANTS: ACTIVE]",
+    ]
+    if preset_name is not None:
+        lines.append(f"- [PRESET: {preset_name.upper()}]")
+    lines.append("END BIAS FIELD")
+    return "\n".join(lines)
 
 
 def assemble_prompt(
