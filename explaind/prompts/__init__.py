@@ -250,4 +250,5 @@ def assemble_prompt(
     layers.append(bias_field)
     layers.append(_INPUT_TEMPLATE.format(log=user_input))
 
-    return LAYER_SEPARATOR.join(layers)
+    assembled = LAYER_SEPARATOR.join(layers)
+    return f"<start_of_turn>user\n{assembled}\n<end_of_turn>\n<start_of_turn>model\n"

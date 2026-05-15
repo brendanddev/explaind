@@ -112,6 +112,8 @@ def scaffold_to_injection(state: ScaffoldState) -> str:
         f"Falsification conditions: {falsifications_str}\n"
         f"Confidence scores: {confidence_str}\n"
         "\n"
+        "[END COGNITIVE SCAFFOLD]\n"
+        "\n"
         "INSTRUCTION:\n"
         "You are operating inside a persistent cognitive scaffold.\n"
         "At the end of your response, output your updates as a \n"
@@ -121,10 +123,7 @@ def scaffold_to_injection(state: ScaffoldState) -> str:
         + _UPDATE_EXAMPLE + "\n"
         "[/SCAFFOLD_UPDATE]\n"
         "\n"
-        "Only include fields you are updating. Omit fields that \n"
-        "have not changed. If you cannot update a field for this \n"
-        "ability type, omit it entirely.\n"
-        "[END COGNITIVE SCAFFOLD]"
+        "Fill all fields. Use null for fields you did not update in this pass."
     )
 
 

@@ -1,3 +1,4 @@
+<start_of_turn>user
 === SYSTEM PROMPT ===
 Maintain perfect equilibrium between all perspectives. Weigh evidence fairly without favoritism or exaggeration.
 
@@ -37,3 +38,5 @@ END BIAS FIELD
 <user_input>
 USER INPUT
 </user_input>
+<end_of_turn>
+<start_of_turn>model
