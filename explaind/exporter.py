@@ -9,6 +9,7 @@ def build_export(
     model: str,
     think: bool = False,
     scaffold_summary: str | None = None,
+    consensus_report: dict | None = None,
 ) -> str:
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     think_str = "enabled" if think else "disabled"
@@ -60,6 +61,25 @@ def build_export(
             "---",
             "",
             scaffold_summary,
+        ])
+
+    if consensus_report is not None:
+        n = consensus_report["n"]
+        agreement = consensus_report["agreement"]
+        pct = consensus_report["agreement_pct"]
+        confidence = consensus_report["confidence"]
+        divergent_runs = consensus_report["divergent_runs"]
+        total_ms = consensus_report["total_ms"]
+        lines.extend([
+            "",
+            "---",
+            "",
+            f"## Consensus Analysis ({n} runs)",
+            "",
+            f"**Agreement**: {agreement}/{n} runs ({pct:.0f}%)  ",
+            f"**Confidence**: {confidence}  ",
+            f"**Divergent runs**: {divergent_runs}  ",
+            f"**Total inference time**: {total_ms}ms  ",
         ])
 
     lines.extend([

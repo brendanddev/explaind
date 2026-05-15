@@ -213,3 +213,57 @@ def print_scaffold_summary(session_id: str, drift_detected: bool, passes: int = 
         console.print(msg, style="dim", markup=False)
     else:
         console.print(msg, markup=False)
+
+
+def print_consensus_progress(run_num: int, total: int) -> None:
+    console = _stderr_console()
+    msg = f"  consensus run {run_num}/{total}..."
+    if console.is_terminal:
+        console.print(msg, style="dim", markup=False)
+    else:
+        console.print(msg, markup=False)
+
+
+def print_consensus_report(report: dict) -> None:
+    n = report["n"]
+    agreement = report["agreement"]
+    pct = report["agreement_pct"]
+    confidence = report["confidence"]
+    divergent_runs = report["divergent_runs"]
+    total_ms = report["total_ms"]
+    avg = round(total_ms / n) if n else 0
+
+    confidence_styles = {"HIGH": "bold green", "MEDIUM": "bold yellow", "LOW": "bold red"}
+    conf_style = confidence_styles.get(confidence, "bold white")
+
+    filled = agreement
+    empty = n - agreement
+    bar = "█" * filled + "░" * empty
+
+    console = _stderr_console()
+    if console.is_terminal:
+        from rich.rule import Rule
+        from rich.text import Text
+
+        width = 44
+        border = "━" * width
+        console.print(f"━━━ Consensus ({n} runs) " + "━" * (width - 18 - len(str(n))), style="dim", markup=False)
+
+        agreement_line = Text()
+        agreement_line.append("Agreement:  ", style="dim")
+        agreement_line.append(f"{agreement}/{n}  {bar}  {pct:.0f}%", style="default")
+        console.print(agreement_line)
+
+        conf_line = Text()
+        conf_line.append("Confidence: ", style="dim")
+        conf_line.append(confidence, style=conf_style)
+        console.print(conf_line)
+
+        console.print(f"Divergent:  {divergent_runs} run(s)", style="dim", markup=False)
+        console.print(f"Time:       {total_ms}ms total · {avg}ms avg", style="dim", markup=False)
+        console.print("━" * width, style="dim", markup=False)
+    else:
+        console.print(f"Consensus: {agreement}/{n} runs agree  ({pct:.0f}%)", markup=False)
+        console.print(f"Confidence: {confidence}", markup=False)
+        console.print(f"Divergent: {divergent_runs} run(s)", markup=False)
+        console.print(f"Time: {total_ms}ms total · {avg}ms avg", markup=False)

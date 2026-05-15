@@ -6,7 +6,8 @@ import argparse
 from datetime import datetime
 from pathlib import Path
 
-from explaind.color import print_chain_header, print_chain_meta, print_chain_separator, print_compare_header, print_error, print_export_confirmation, print_honest_header, print_honest_meta, print_honest_separator, print_model_meta, print_model_output, print_run_header, print_scaffold_status, print_scaffold_summary, print_warning
+from explaind.color import print_chain_header, print_chain_meta, print_chain_separator, print_compare_header, print_consensus_progress, print_consensus_report, print_error, print_export_confirmation, print_honest_header, print_honest_meta, print_honest_separator, print_model_meta, print_model_output, print_run_header, print_scaffold_status, print_scaffold_summary, print_warning
+from explaind.consensus import run_consensus
 from explaind.exporter import build_export
 from explaind.scaffold import build_initial_scaffold, parse_scaffold_update, scaffold_to_export_summary, scaffold_to_injection
 from explaind.config import DEFAULTS, load_config
@@ -94,8 +95,8 @@ def _emit_trace(prompt_trace, config, file=sys.stderr) -> None:
     print(format_trace(td), file=file)
 
 
-def _write_export(question: str, runs: list[dict], model: str, think: bool, path: str, scaffold_summary: str | None = None) -> None:
-    md = build_export(question, runs, model, think, scaffold_summary=scaffold_summary)
+def _write_export(question: str, runs: list[dict], model: str, think: bool, path: str, scaffold_summary: str | None = None, consensus_report: dict | None = None) -> None:
+    md = build_export(question, runs, model, think, scaffold_summary=scaffold_summary, consensus_report=consensus_report)
     try:
         Path(path).write_text(md, encoding="utf-8")
         print_export_confirmation(path)
@@ -189,6 +190,12 @@ def main():
         action="store_true",
         help="activates persistent cognitive scaffold for --chain runs (requires --chain)",
     )
+    parser.add_argument(
+        "--consensus",
+        type=int,
+        metavar="N",
+        help="run the same prompt N times (2-10) and surface the most consistent answer",
+    )
     args = parser.parse_args()
 
     export_path: str | None = None
@@ -250,6 +257,24 @@ def main():
     if args.scaffold and not args.chain:
         print_error("explaind: --scaffold requires --chain")
         sys.exit(1)
+
+    # --consensus validation and mutual exclusions
+    if args.consensus is not None:
+        if args.consensus < 2:
+            print_error("explaind: --consensus minimum is 2")
+            sys.exit(1)
+        if args.consensus > 10:
+            print_error("explaind: --consensus maximum is 10")
+            sys.exit(1)
+        if args.compare:
+            print_error("explaind: --consensus and --compare are mutually exclusive")
+            sys.exit(1)
+        if args.chain:
+            print_error("explaind: --consensus and --chain are mutually exclusive")
+            sys.exit(1)
+        if args.honest:
+            print_error("explaind: --consensus and --honest are mutually exclusive")
+            sys.exit(1)
 
     # resolve preset -> ability_name
     preset_ability: str | None = None
@@ -665,6 +690,95 @@ def main():
 
         if export_path:
             _write_export(content, compare_runs, config.model_name, args.think, export_path)
+
+        return
+
+    # --- consensus: self-consistency aggregator ---
+    if args.consensus is not None:
+        effective_ability = preset_ability if args.preset else args.ability
+
+        if args.dry_run:
+            try:
+                result, prompt_trace = run(
+                    content,
+                    ability=effective_ability,
+                    dry_run=True,
+                    trace=args.trace,
+                    think=args.think,
+                    scratchpad=scratchpad_content,
+                    context=context_content,
+                    preset_name=args.preset,
+                )
+            except ValueError as e:
+                print_error(f"explaind: {e}")
+                sys.exit(1)
+            print(result)
+            print(f"\n[consensus: would run {args.consensus} times]")
+            if args.trace and prompt_trace is not None:
+                try:
+                    cfg = load_config()
+                except ConfigError:
+                    cfg = DEFAULTS
+                _emit_trace(prompt_trace, cfg)
+            return
+
+        try:
+            config = load_config()
+        except ConfigError as e:
+            print_error(f"explaind: {e}")
+            sys.exit(1)
+
+        try:
+            invoker = build_invoker(config)
+        except ConfigError as e:
+            print_error(f"explaind: {e}")
+            sys.exit(1)
+
+        try:
+            assembled_prompt, prompt_trace = run(
+                content,
+                ability=effective_ability,
+                dry_run=True,
+                trace=args.trace,
+                think=args.think,
+                scratchpad=scratchpad_content,
+                context=context_content,
+                preset_name=args.preset,
+            )
+        except ValueError as e:
+            print_error(f"explaind: {e}")
+            sys.exit(1)
+
+        try:
+            best_output, consensus_rep = run_consensus(
+                invoker,
+                assembled_prompt,
+                args.consensus,
+                on_run_start=print_consensus_progress,
+            )
+        except ModelInvocationError as e:
+            print_error(f"explaind: {e}")
+            sys.exit(1)
+
+        latency_ms = consensus_rep["total_ms"]
+
+        print_run_header(effective_ability or "balanced", args.think, preset=args.preset)
+        print_model_output(best_output)
+        print_model_meta(config.model_name, latency_ms, ability=effective_ability or "balanced")
+        print_consensus_report(consensus_rep)
+
+        if args.trace and prompt_trace is not None:
+            _emit_trace(prompt_trace, config)
+
+        if export_path:
+            _write_export(
+                content,
+                [{"ability": effective_ability or "balanced", "preset": args.preset, "output": best_output, "duration_ms": latency_ms}],
+                config.model_name,
+                args.think,
+                export_path,
+                consensus_report=consensus_rep,
+            )
 
         return
 

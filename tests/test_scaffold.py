@@ -140,7 +140,9 @@ def test_assemble_prompt_scaffold_context_position():
     assert "UNIQUE_SCAFFOLD_MARKER" in prompt
     ctx_pos = prompt.index("[CONTEXT WINDOW LAYERS]")
     scaffold_pos = prompt.index("UNIQUE_SCAFFOLD_MARKER")
-    bias_pos = prompt.index("BIAS FIELD")
+    # Use "END BIAS FIELD" to avoid the false positive at "ABILITY + BIAS FIELD priority."
+    # inside the context window instruction text.
+    bias_pos = prompt.index("END BIAS FIELD")
     assert ctx_pos < scaffold_pos < bias_pos
 
 
