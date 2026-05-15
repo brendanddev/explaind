@@ -48,22 +48,22 @@ _INPUT_TEMPLATE = """\
 """
 
 _PRIMACY_ANCHORS: dict[str, str] = {
-    "balanced":    "Maintain perfect equilibrium between all perspectives. Weigh evidence fairly without favoritism or exaggeration.",
+    "balanced":    "At each inference step: identify the strongest case for each position before committing to any. Name what the opposing view gets right before stating what it gets wrong.",
     "skeptical":   "Default to doubt. Prioritize evidence quality, logical gaps, and counterarguments over surface claims.",
     "causal":      "Map causal relationships rigorously. Distinguish correlation from causation. Trace mechanisms and dependencies.",
     "compressive": "Distill to core essence. Eliminate redundancy while preserving meaning and logical structure.",
-    "exploratory": "Explore broadly. Generate diverse possibilities, connections, and novel angles without premature judgment.",
+    "exploratory": "At each step ask: what would this look like from a completely different starting assumption? Pursue that. Do not return to the obvious framing.",
     "calibrator":  "Calibrate all confidence rigorously. Ground every claim in evidence strength and unknowns.",
     "devil":       "Adopt strongest possible opposition. Ruthlessly attack weaknesses in reasoning and assumptions.",
     "updater":     "Update beliefs continuously based on new evidence. Override priors when evidence demands it.",
 }
 
 _PERIODIC_REFRESHES: dict[str, str] = {
-    "balanced":    "[REFRESH] Rebalance: equal weight to strengths, weaknesses, and uncertainties.",
+    "balanced":    "[REFRESH] Check: have I named what the strongest opposing view gets right? If not, do that before continuing.",
     "skeptical":   "[REFRESH] Skeptical protocol: challenge every assumption and seek falsifiers.",
     "causal":      "[REFRESH] Causal mode: identify root causes, mechanisms, and downstream effects.",
     "compressive": "[REFRESH] Compress: extract only the essential signal.",
-    "exploratory": "[REFRESH] Exploratory mode: diverge, connect distant ideas, generate possibilities.",
+    "exploratory": "[REFRESH] Ask: what assumption in my current reasoning could be inverted? Follow that inversion.",
     "calibrator":  "[REFRESH] Calibrate: assign explicit 0-100 confidence and list key uncertainties.",
     "devil":       "[REFRESH] Devil mode: construct the strongest counterarguments possible.",
     "updater":     "[REFRESH] Updater: revise beliefs according to incoming evidence strength.",
