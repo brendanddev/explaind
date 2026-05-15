@@ -6,7 +6,7 @@ import argparse
 from datetime import datetime
 from pathlib import Path
 
-from explaind.color import print_chain_header, print_chain_meta, print_chain_separator, print_compare_header, print_consensus_progress, print_consensus_report, print_error, print_export_confirmation, print_honest_header, print_honest_meta, print_honest_separator, print_model_meta, print_model_output, print_run_header, print_scaffold_status, print_scaffold_summary, print_warning
+from explaind.color import print_about, print_chain_header, print_chain_meta, print_chain_separator, print_compare_header, print_consensus_progress, print_consensus_report, print_error, print_examples, print_export_confirmation, print_honest_header, print_honest_meta, print_honest_separator, print_list_abilities, print_model_meta, print_model_output, print_run_header, print_scaffold_status, print_scaffold_summary, print_warning
 from explaind.consensus import run_consensus
 from explaind.exporter import build_export
 from explaind.scaffold import build_initial_scaffold, parse_scaffold_update, scaffold_to_export_summary, scaffold_to_injection
@@ -107,8 +107,19 @@ def _write_export(question: str, runs: list[dict], model: str, think: bool, path
 def main():
     parser = argparse.ArgumentParser(
         prog="explaind",
-        description="Debugging assistant powered by Gemma 4",
+        description=(
+            "explaind — cognitive steering layer for Gemma 4\n"
+            "Shape reasoning trajectories through structured prompt physics."
+        ),
+        epilog=(
+            "Run --about for architecture overview.\n"
+            "Run --list-abilities to see all reasoning modes.\n"
+            "Run --list-presets to see all presets.\n"
+            "Run --examples to see usage examples.\n"
+            "Run --dry-run to inspect assembled prompts without invoking the model."
+        ),
         usage="%(prog)s [file]\n       cat file | %(prog)s\n       %(prog)s < file",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument(
         "file",
@@ -168,6 +179,21 @@ def main():
         help="print available presets with their mapped ability and description, then exit",
     )
     parser.add_argument(
+        "--list-abilities",
+        action="store_true",
+        help="print all abilities with their trajectory and description, then exit",
+    )
+    parser.add_argument(
+        "--examples",
+        action="store_true",
+        help="print usage examples for all major features, then exit",
+    )
+    parser.add_argument(
+        "--about",
+        action="store_true",
+        help="print architecture overview and exit",
+    )
+    parser.add_argument(
         "--export",
         nargs="?",
         const=True,
@@ -204,13 +230,26 @@ def main():
     elif args.export:
         export_path = args.export
 
-    # --list-presets: print and exit immediately, no input required
+    # info flags: print and exit, no input required
+    # all active info flags run in order; exit 0 if any were set
+    _info_handled = False
+    if args.list_abilities:
+        print_list_abilities()
+        _info_handled = True
     if args.list_presets:
         name_w = max(len(n) for n in PRESET_MAP) + 2
         ability_w = max(len(a) for a in PRESET_MAP.values()) + 2
         for name, ability in PRESET_MAP.items():
             desc = preset_description(name)
             print(f"{name:<{name_w}} →  {ability:<{ability_w}} {desc}")
+        _info_handled = True
+    if args.examples:
+        print_examples()
+        _info_handled = True
+    if args.about:
+        print_about()
+        _info_handled = True
+    if _info_handled:
         sys.exit(0)
 
     # --preset, --ability, --compare are mutually exclusive

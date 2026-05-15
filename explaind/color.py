@@ -224,6 +224,162 @@ def print_consensus_progress(run_num: int, total: int) -> None:
         console.print(msg, markup=False)
 
 
+_ABILITY_DESCRIPTIONS: dict[str, str] = {
+    "balanced":    "Integrated analysis across all frameworks",
+    "skeptical":   "Epistemic pressure applied to every claim",
+    "causal":      "Mechanism tracing from outcome to root cause",
+    "compressive": "Maximum signal density, minimum elaboration",
+    "exploratory": "Generative inquiry, resists premature closure",
+    "calibrator":  "Explicit confidence scoring on every claim",
+    "devil":       "Adversarial pressure, argues opposing position",
+    "updater":     "Bayesian belief revision from prior to posterior",
+}
+
+_ABILITY_ORDER = [
+    "balanced",
+    "skeptical",
+    "causal",
+    "compressive",
+    "exploratory",
+    "calibrator",
+    "devil",
+    "updater",
+]
+
+_EXAMPLES_SECTIONS = [
+    ("BASIC USAGE", [
+        'echo "Your question" | explaind',
+        'echo "Your question" | explaind --ability skeptical',
+        'explaind --file document.txt --ability causal',
+    ]),
+    ("COMPARE ABILITIES", [
+        'echo "Was the 2008 crisis preventable?" | explaind --compare skeptical causal compressive',
+        'echo "Is AI safe?" | explaind --compare devil calibrator balanced',
+    ]),
+    ("REASONING CHAINS", [
+        'echo "What caused inflation?" | explaind --chain causal compressive skeptical',
+        'echo "Analyse this claim" | explaind --chain causal compressive skeptical --scaffold',
+    ]),
+    ("SELF-CRITIQUE", [
+        'echo "Explain quantum entanglement" | explaind --honest',
+        'echo "Explain quantum entanglement" | explaind --honest --think',
+    ]),
+    ("SELF-CONSISTENCY", [
+        'echo "What is the root cause of X?" | explaind --ability causal --consensus 5',
+        'echo "Is this argument valid?" | explaind --preset critic --consensus 3',
+    ]),
+    ("PRESETS", [
+        'echo "Is consciousness an illusion?" | explaind --preset philosopher',
+        'echo "Why is this system failing?" | explaind --preset engineer --think',
+    ]),
+    ("CONTEXT INJECTION", [
+        'echo "What should we conclude?" | explaind --ability updater --scratchpad notes.md',
+        'echo "Evaluate this" | explaind --ability skeptical --context background.md',
+    ]),
+    ("EXPORT", [
+        'echo "Your question" | explaind --compare skeptical causal --export analysis.md',
+        'echo "Your question" | explaind --chain causal compressive skeptical --scaffold --export chain.md',
+    ]),
+]
+
+_ABOUT_TEXT_PLAIN = """\
+explaind — cognitive steering layer for Gemma 4
+
+A structured prompt physics system that shapes Gemma 4's
+reasoning trajectories through layered injection of:
+  · System constraints (GEMMA.md invariant layer)
+  · Ability bias vectors (8 named reasoning modes)
+  · Three-position BIAS FIELD (primacy + periodic + recency)
+  · Cognitive scaffold (persistent state across chain passes)
+
+Built around Gemma 4's documented failure modes — not despite
+them. Every design decision maps to a specific model behavior.
+
+Abilities:  8 reasoning modes grounded in cognitive science
+Presets:    6 named thinking personalities
+Chains:     Sequential ability pipelines with handoff state
+Scaffold:   Persistent JSON reasoning architecture
+Consensus:  Self-consistency aggregation (Wang et al. 2022)
+
+Run --list-abilities to see all reasoning modes.
+Run --list-presets to see all presets.
+Run --examples to see usage examples."""
+
+
+def print_list_abilities() -> None:
+    name_w = max(len(n) for n in _ABILITY_ORDER) + 2
+    traj_w = name_w
+    console = _stdout_console()
+    if console.is_terminal:
+        for name in _ABILITY_ORDER:
+            desc = _ABILITY_DESCRIPTIONS[name]
+            color = _ABILITY_COLORS.get(name, "bold white")
+            t = Text()
+            t.append(f"{name:<{name_w}}", style=color)
+            t.append("→  ", style="dim")
+            t.append(f"{name:<{traj_w}}", style="dim")
+            t.append(desc)
+            console.print(t, markup=False)
+    else:
+        for name in _ABILITY_ORDER:
+            desc = _ABILITY_DESCRIPTIONS[name]
+            print(f"{name:<{name_w}} →  {name:<{traj_w}} {desc}")
+
+
+def print_examples() -> None:
+    console = _stdout_console()
+    if console.is_terminal:
+        for header, examples in _EXAMPLES_SECTIONS:
+            console.print(f"\n{header}", style="bold")
+            for ex in examples:
+                console.print(f"  {ex}", style="dim", markup=False)
+        console.print()
+    else:
+        for header, examples in _EXAMPLES_SECTIONS:
+            print(f"\n{header}")
+            for ex in examples:
+                print(f"  {ex}")
+        print()
+
+
+def print_about() -> None:
+    console = _stdout_console()
+    if not console.is_terminal:
+        print(_ABOUT_TEXT_PLAIN)
+        return
+
+    t = Text()
+    t.append("explaind", style="bold")
+    t.append(" — cognitive steering layer for Gemma 4\n\n")
+    t.append("A structured prompt physics system that shapes Gemma 4's\n")
+    t.append("reasoning trajectories through layered injection of:\n")
+    t.append("  · System constraints ", style="default")
+    t.append("(GEMMA.md invariant layer)\n", style="dim")
+    t.append("  · Ability bias vectors ", style="default")
+    t.append("(8 named reasoning modes)\n", style="dim")
+    t.append("  · Three-position ", style="default")
+    t.append("BIAS FIELD", style="bold")
+    t.append(" (primacy + periodic + recency)\n", style="dim")
+    t.append("  · Cognitive scaffold ", style="default")
+    t.append("(persistent state across chain passes)\n", style="dim")
+    t.append("\nBuilt around Gemma 4's documented failure modes — not despite\n")
+    t.append("them. Every design decision maps to a specific model behavior.\n\n")
+    t.append("Abilities:  ", style="dim")
+    t.append("8 reasoning modes grounded in cognitive science\n")
+    t.append("Presets:    ", style="dim")
+    t.append("6 named thinking personalities\n")
+    t.append("Chains:     ", style="dim")
+    t.append("Sequential ability pipelines with handoff state\n")
+    t.append("Scaffold:   ", style="dim")
+    t.append("Persistent JSON reasoning architecture\n")
+    t.append("Consensus:  ", style="dim")
+    t.append("Self-consistency aggregation (Wang et al. 2022)\n\n")
+    t.append("Run --list-abilities to see all reasoning modes.\n")
+    t.append("Run --list-presets to see all presets.\n")
+    t.append("Run --examples to see usage examples.")
+    console.print(t)
+
+
 def print_consensus_report(report: dict) -> None:
     n = report["n"]
     agreement = report["agreement"]
