@@ -25,9 +25,12 @@ class OllamaInvoker(ModelInvoker):
         payload = json.dumps({
             "model": self._model,
             "prompt": prompt,
-            "temperature": self._temperature,
-            "num_predict": self._max_tokens,
             "stream": False,
+            "raw": True,
+            "options": {
+                "temperature": self._temperature,
+                "num_predict": self._max_tokens,
+            },
         }).encode()
 
         req = urllib.request.Request(

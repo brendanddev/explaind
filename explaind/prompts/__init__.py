@@ -230,8 +230,7 @@ def assemble_prompt(
         ability_name, f"[REFRESH] {ability_name.upper()} protocol: active."
     )
 
-    base_system = system + "\n<|think|>" if think else system
-    system_content = primacy + "\n\n" + base_system
+    system_content = primacy + "\n\n" + system
     layers: list[str] = [_SYSTEM_TEMPLATE.format(content=system_content)]
 
     if gemma_md:
@@ -251,4 +250,5 @@ def assemble_prompt(
     layers.append(_INPUT_TEMPLATE.format(log=user_input))
 
     assembled = LAYER_SEPARATOR.join(layers)
-    return f"<start_of_turn>user\n{assembled}\n<end_of_turn>\n<start_of_turn>model\n"
+    model_prefill = "<|think|>\n" if think else ""
+    return f"<start_of_turn>user\n{assembled}\n<end_of_turn>\n<start_of_turn>model\n{model_prefill}"

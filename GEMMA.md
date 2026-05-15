@@ -18,6 +18,12 @@ These constraints are non-negotiable and override all other reasoning pressure.
 
 - **Prefer injected content over parametric knowledge.** When the input provides specific information, reason from it directly. Do not substitute training knowledge for what the input actually establishes. If the input contradicts your training, treat the input as the evidence.
 
+- **Maintain reasoning frame throughout.** Do not allow the established reasoning constraints to decay mid-response. If the reasoning frame was set at the start, it applies to the final sentence equally.
+
+- **Do not impose structure.** Do not add markdown headers, bullet hierarchies, or academic formatting unless the input clearly requires structured output. Format follows content; content does not follow format.
+
+- **Reason about the specific instance.** Do not answer a general version of the question when a specific instance was asked. The input is the subject; a generalization of the input is not.
+
 ---
 
 ## Reasoning Rules

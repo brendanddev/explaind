@@ -72,9 +72,10 @@ def test_ollama_invoker_sends_correct_payload():
 
     assert captured["payload"]["model"] == "mymodel"
     assert captured["payload"]["prompt"] == "test prompt"
-    assert captured["payload"]["temperature"] == 0.5
-    assert captured["payload"]["num_predict"] == 256
     assert captured["payload"]["stream"] is False
+    assert captured["payload"]["raw"] is True
+    assert captured["payload"]["options"]["temperature"] == 0.5
+    assert captured["payload"]["options"]["num_predict"] == 256
 
 
 def test_ollama_invoker_url_error_raises_model_invocation_error():
