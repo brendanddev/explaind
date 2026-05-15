@@ -6,8 +6,9 @@ import argparse
 from datetime import datetime
 from pathlib import Path
 
-from explaind.color import print_chain_header, print_chain_meta, print_chain_separator, print_compare_header, print_error, print_export_confirmation, print_honest_header, print_honest_meta, print_honest_separator, print_model_meta, print_model_output, print_run_header, print_warning
+from explaind.color import print_chain_header, print_chain_meta, print_chain_separator, print_compare_header, print_error, print_export_confirmation, print_honest_header, print_honest_meta, print_honest_separator, print_model_meta, print_model_output, print_run_header, print_scaffold_status, print_scaffold_summary, print_warning
 from explaind.exporter import build_export
+from explaind.scaffold import build_initial_scaffold, parse_scaffold_update, scaffold_to_export_summary, scaffold_to_injection
 from explaind.config import DEFAULTS, load_config
 from explaind.errors import ConfigError, InputError, ModelInvocationError
 from explaind.invoker import build_invoker
@@ -93,8 +94,8 @@ def _emit_trace(prompt_trace, config, file=sys.stderr) -> None:
     print(format_trace(td), file=file)
 
 
-def _write_export(question: str, runs: list[dict], model: str, think: bool, path: str) -> None:
-    md = build_export(question, runs, model, think)
+def _write_export(question: str, runs: list[dict], model: str, think: bool, path: str, scaffold_summary: str | None = None) -> None:
+    md = build_export(question, runs, model, think, scaffold_summary=scaffold_summary)
     try:
         Path(path).write_text(md, encoding="utf-8")
         print_export_confirmation(path)
@@ -183,6 +184,11 @@ def main():
         metavar="NAME",
         help="run abilities in sequence, each pass feeding its output as scratchpad to the next",
     )
+    parser.add_argument(
+        "--scaffold",
+        action="store_true",
+        help="activates persistent cognitive scaffold for --chain runs (requires --chain)",
+    )
     args = parser.parse_args()
 
     export_path: str | None = None
@@ -238,6 +244,11 @@ def main():
         sys.exit(1)
     if args.chain and args.honest:
         print_error("explaind: --chain and --honest are mutually exclusive")
+        sys.exit(1)
+
+    # --scaffold requires --chain
+    if args.scaffold and not args.chain:
+        print_error("explaind: --scaffold requires --chain")
         sys.exit(1)
 
     # resolve preset -> ability_name
@@ -429,8 +440,12 @@ def main():
             except ConfigError:
                 cfg = DEFAULTS
 
+            scaffold_state = build_initial_scaffold(content, args.chain) if args.scaffold else None
+
             for i, ability in enumerate(args.chain):
                 pass_num = i + 1
+
+                scaffold_injection = scaffold_to_injection(scaffold_state) if scaffold_state is not None else None
 
                 if i == 0:
                     sp = scratchpad_content
@@ -449,6 +464,7 @@ def main():
                         think=args.think,
                         scratchpad=sp,
                         context=context_content,
+                        scaffold_context=scaffold_injection,
                     )
                 except ValueError as e:
                     print_error(f"explaind: {e}")
@@ -461,6 +477,11 @@ def main():
 
                 if args.trace and trace is not None:
                     _emit_trace(trace, cfg)
+
+                if scaffold_state is not None:
+                    scaffold_state.stage_history.append(ability)
+                    if i + 1 < len(args.chain):
+                        scaffold_state.current_stage = args.chain[i + 1]
 
             return
 
@@ -476,11 +497,15 @@ def main():
             print_error(f"explaind: {e}")
             sys.exit(1)
 
+        scaffold_state = build_initial_scaffold(content, args.chain) if args.scaffold else None
+
         chain_results: list[tuple[str, str, int, object]] = []
         prev_output: str | None = None
 
         for i, ability in enumerate(args.chain):
             pass_num = i + 1
+
+            scaffold_injection = scaffold_to_injection(scaffold_state) if scaffold_state is not None else None
 
             if i == 0:
                 sp = scratchpad_content
@@ -510,6 +535,7 @@ def main():
                         think=args.think,
                         scratchpad=sp,
                         context=context_content,
+                        scaffold_context=scaffold_injection,
                     )
                     ms = round((time.monotonic() - t0) * 1000)
             except ValueError as e:
@@ -518,6 +544,14 @@ def main():
             except ModelInvocationError as e:
                 print_error(f"explaind: {e}")
                 sys.exit(1)
+
+            if scaffold_state is not None:
+                scaffold_state, result = parse_scaffold_update(result, scaffold_state)
+                if args.trace:
+                    print_scaffold_status(ability, pass_num, len(args.chain), scaffold_state.drift_detected)
+                scaffold_state.stage_history.append(ability)
+                if i + 1 < len(args.chain):
+                    scaffold_state.current_stage = args.chain[i + 1]
 
             prev_output = result
             chain_results.append((ability, result, ms, trace))
@@ -530,6 +564,11 @@ def main():
                 _emit_trace(trace, config)
 
         print_chain_meta(config.model_name, [ms for _, _, ms, _ in chain_results])
+
+        if args.trace and scaffold_state is not None:
+            print_scaffold_summary(scaffold_state.session_id, scaffold_state.drift_detected, len(scaffold_state.stage_history))
+
+        scaffold_export_summary = scaffold_to_export_summary(scaffold_state) if scaffold_state is not None and export_path else None
 
         if export_path:
             _write_export(
@@ -547,6 +586,7 @@ def main():
                 config.model_name,
                 args.think,
                 export_path,
+                scaffold_summary=scaffold_export_summary,
             )
 
         return

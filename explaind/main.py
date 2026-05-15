@@ -43,6 +43,7 @@ def run(
     scratchpad: str | None = None,
     context: str | None = None,
     preset_name: str | None = None,
+    scaffold_context: str | None = None,
 ) -> tuple[str, PromptTrace | None]:
     """Assemble prompt and invoke the model.
 
@@ -50,6 +51,7 @@ def run(
     Returns (result_text, PromptTrace) — PromptTrace is None when trace=False.
     scratchpad and context, when provided, are injected into the context window.
     preset_name, when provided, adds a [PRESET: NAME] marker to the bias field.
+    scaffold_context, when provided, is injected between context window and bias field.
     """
     gemma_md = load_gemma_md()
 
@@ -69,6 +71,7 @@ def run(
         think=think,
         scratchpad=scratchpad,
         context=context,
+        scaffold_context=scaffold_context,
     )
 
     prompt_trace = PromptTrace(

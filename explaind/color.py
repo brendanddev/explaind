@@ -193,3 +193,23 @@ def print_chain_meta(model: str, times: list[int]) -> None:
         console.print(f"  {footer_text}", style="dim", markup=False)
     else:
         console.print(footer_text, style="dim", markup=False)
+
+
+def print_scaffold_status(stage: str, pass_num: int, total: int, drift: bool) -> None:
+    console = _stderr_console()
+    status = "DRIFT DETECTED" if drift else "state updated"
+    msg = f"scaffold · pass {pass_num}/{total} · {stage} complete · {status}"
+    if console.is_terminal:
+        console.print(msg, style="dim", markup=False)
+    else:
+        console.print(msg, markup=False)
+
+
+def print_scaffold_summary(session_id: str, drift_detected: bool, passes: int = 0) -> None:
+    console = _stderr_console()
+    drift_str = f"drift detected in {passes} passes" if drift_detected else "clean"
+    msg = f"scaffold session {session_id} · {passes} passes · {drift_str}"
+    if console.is_terminal:
+        console.print(msg, style="dim", markup=False)
+    else:
+        console.print(msg, markup=False)

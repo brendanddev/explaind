@@ -201,6 +201,7 @@ def assemble_prompt(
     think: bool = False,
     scratchpad: str | None = None,
     context: str | None = None,
+    scaffold_context: str | None = None,
 ) -> str:
     """Pure function. Assembles the full prompt in strict layer order.
 
@@ -211,8 +212,9 @@ def assemble_prompt(
       4. ability        (skipped when None)
       5. periodic       (second injection, skipped when ability is None)
       6. context_window
-      7. bias_field     (recency position)
-      8. user_input
+      7. scaffold_context (skipped when None)
+      8. bias_field     (recency position)
+      9. user_input
 
     Performs no I/O, no config access, no global state reads.
     Output is byte-stable for identical inputs.
@@ -241,6 +243,10 @@ def assemble_prompt(
         layers.append(periodic)
 
     layers.append(context_window)
+
+    if scaffold_context is not None:
+        layers.append(scaffold_context)
+
     layers.append(bias_field)
     layers.append(_INPUT_TEMPLATE.format(log=user_input))
 

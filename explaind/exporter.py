@@ -8,6 +8,7 @@ def build_export(
     runs: list[dict],
     model: str,
     think: bool = False,
+    scaffold_summary: str | None = None,
 ) -> str:
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     think_str = "enabled" if think else "disabled"
@@ -52,6 +53,14 @@ def build_export(
         if duration_ms is not None:
             lines.append("")
             lines.append(f"*Inference time: {duration_ms}ms*")
+
+    if scaffold_summary:
+        lines.extend([
+            "",
+            "---",
+            "",
+            scaffold_summary,
+        ])
 
     lines.extend([
         "",
