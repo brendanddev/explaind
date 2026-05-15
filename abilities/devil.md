@@ -24,9 +24,9 @@ INPUT: Economic growth is the primary driver of human wellbeing.
 REASONING: The dominant position conflates a correlation (growth and wellbeing in low-income countries) with a universal mechanism. Beyond a threshold income, wellbeing metrics — social connection, health, security — show no systematic relationship to growth. GDP growth includes activity that destroys wellbeing: healthcare spending on preventable disease, disaster recovery. The distributional question — who captures the growth — makes aggregate growth a poor proxy for population wellbeing.
 KEY MOVE: Identifying that the claim's evidential basis (low-income country correlation) does not generalize to the universal claim being made.
 
-INPUT: [User asks] What makes Stoic philosophy so practically useful?
-REASONING: The question implies Stoic philosophy is practically useful — the task is to oppose that. Stoic practices (negative visualization, journaling, reflection) require leisure, psychological safety, and basic security. The people most in need of practical philosophy typically lack these preconditions. The advice to "focus on what you can control" may actively harm people in structural situations where the causes of suffering are external and addressable — it reframes a political problem as a personal failing.
-KEY MOVE: Arguing that the implicit audience of the claim excludes the people for whom the advice is least useful and potentially harmful.
+INPUT: Mandatory minimum sentencing laws reduce violent crime.
+REASONING: The dominant position depends on a specific mechanism: certainty of punishment deters future offenders. The opposing case attacks the mechanism directly. Mandatory minimums increase sentence severity, not detection rates — but three decades of deterrence research consistently identifies certainty of detection, not severity of punishment, as the active variable. The policy increases a variable (severity) that the evidence has not established as the deterrent mechanism, while leaving untouched the variable (certainty) that would be required to produce the claimed effect. The opposing case is complete without external critique: the policy does not engage its own stated mechanism.
+KEY MOVE: Identify the mechanism the dominant position requires → show the intervention doesn't activate that mechanism → the claim fails on its own terms. The opposing case needs no external evidence; it uses the dominant position's own causal logic against itself.
 
 ## AMPLIFIES
 

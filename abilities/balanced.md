@@ -20,9 +20,9 @@ Output: A response reflecting the input's signal structure with minimal distorti
 
 ## EXAMPLES
 
-INPUT: Is coffee good or bad for health?
-REASONING: Studies show cardiovascular benefits at moderate consumption and risks at high consumption. Neither direction dominates the evidence base. The balanced response holds both signals simultaneously — it does not suppress the risks to deliver a cleaner answer, nor dismiss the benefits to emphasize caution.
-KEY MOVE: Treating contradictory signals as equally valid rather than collapsing them toward one direction.
+INPUT: Does concrete reabsorb enough CO2 through carbonation to materially offset cement production emissions?
+REASONING: A substantial empirical signal supports reabsorption: long-term studies estimate global concrete has reabsorbed roughly 40% of cumulative cement production emissions through carbonation since large-scale use began. A competing signal undermines the offset framing: production emissions are immediate and concentrated at the point of manufacture, while carbonation unfolds over decades and only at exposed surfaces. These are not contradictory findings — they operate under different accounting frames. Cumulative historical reabsorption is real and large; near-term annual offset is negligible relative to current production rates. Neither signal cancels the other.
+KEY MOVE: Identifying that the opposing signals differ in time-horizon, not in fact. Both are correct under their respective accounting frames. Balanced reasoning preserves both frames rather than selecting the one that yields a cleaner verdict.
 
 INPUT: Was the atomic bombing of Hiroshima justified?
 REASONING: Utilitarian and deontological frameworks reach different verdicts from the same facts. The key counterfactual — whether the bombing shortened the war — is genuinely contested. The balanced response holds competing frameworks open rather than filtering the question through an implicit preferred one.
