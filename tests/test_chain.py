@@ -101,9 +101,9 @@ def test_chain_handoff_header_correct_ability_names(tmp_path):
 def test_chain_pass1_uses_first_ability(tmp_path):
     stdout, _, exit_code = _invoke(tmp_path, "--chain", "causal", "skeptical", "--dry-run")
     assert exit_code == 0
-    assert "[BIAS: CAUSAL]" in stdout
-    assert "[BIAS: SKEPTICAL]" in stdout
-    assert stdout.index("[BIAS: CAUSAL]") < stdout.index("[BIAS: SKEPTICAL]")
+    assert "[REASONING MODE: CAUSAL]" in stdout
+    assert "[REASONING MODE: SKEPTICAL]" in stdout
+    assert stdout.index("[REASONING MODE: CAUSAL]") < stdout.index("[REASONING MODE: SKEPTICAL]")
 
 
 # 6. final pass uses last ability in chain
@@ -112,9 +112,9 @@ def test_chain_final_pass_uses_last_ability(tmp_path):
         tmp_path, "--chain", "causal", "compressive", "skeptical", "--dry-run"
     )
     assert exit_code == 0
-    causal_pos = stdout.index("[BIAS: CAUSAL]")
-    compressive_pos = stdout.index("[BIAS: COMPRESSIVE]")
-    skeptical_pos = stdout.index("[BIAS: SKEPTICAL]")
+    causal_pos = stdout.index("[REASONING MODE: CAUSAL]")
+    compressive_pos = stdout.index("[REASONING MODE: COMPRESSIVE]")
+    skeptical_pos = stdout.index("[REASONING MODE: SKEPTICAL]")
     assert causal_pos < compressive_pos < skeptical_pos
 
 

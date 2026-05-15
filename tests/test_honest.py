@@ -86,16 +86,16 @@ def test_honest_pass2_scratchpad_contains_initial_response_header(tmp_path):
 def test_honest_pass2_uses_skeptical_regardless_of_ability(tmp_path):
     stdout, _, exit_code = _invoke(tmp_path, "--honest", "--dry-run", "--ability", "causal")
     assert exit_code == 0
-    assert "[BIAS: SKEPTICAL]" in stdout
-    assert "[BIAS: CAUSAL]" not in stdout
+    assert "[REASONING MODE: SKEPTICAL]" in stdout
+    assert "[REASONING MODE: CAUSAL]" not in stdout
 
 
 # 4. pass 1 uses balanced ability regardless of --ability flag
 def test_honest_pass1_uses_balanced_regardless_of_ability(tmp_path):
     stdout, _, exit_code = _invoke(tmp_path, "--honest", "--dry-run", "--ability", "causal")
     assert exit_code == 0
-    assert "[BIAS: BALANCED]" in stdout
-    assert "[BIAS: CAUSAL]" not in stdout
+    assert "[REASONING MODE: BALANCED]" in stdout
+    assert "[REASONING MODE: CAUSAL]" not in stdout
 
 
 # 5. --honest and --compare together exits 1

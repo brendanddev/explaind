@@ -1,34 +1,48 @@
 import pytest
 from explaind.prompts import build_bias_field
 
-_EXPECTED = {
-    "balanced":    {"bias": "BALANCED",    "trajectory": "balanced",    "epistemic": "neutral"},
-    "skeptical":   {"bias": "SKEPTICAL",   "trajectory": "skeptical",   "epistemic": "skeptical"},
-    "causal":      {"bias": "CAUSAL",      "trajectory": "causal",      "epistemic": "neutral"},
-    "compressive": {"bias": "COMPRESSIVE", "trajectory": "compressive", "epistemic": "neutral"},
-    "exploratory": {"bias": "EXPLORATORY", "trajectory": "exploratory", "epistemic": "neutral"},
-}
+_ABILITIES = [
+    "balanced",
+    "skeptical",
+    "causal",
+    "compressive",
+    "exploratory",
+    "calibrator",
+    "devil",
+    "updater",
+]
 
 
-@pytest.mark.parametrize("ability,expected", _EXPECTED.items())
-def test_bias_field_values(ability, expected):
+@pytest.mark.parametrize("ability", _ABILITIES)
+def test_bias_field_contains_reasoning_mode(ability):
     result = build_bias_field(ability)
-    assert f"[BIAS: {expected['bias']}]" in result
-    assert f"[TRAJECTORY: {expected['trajectory']}]" in result
-    assert f"[EPISTEMIC: {expected['epistemic']}]" in result
-    assert "[INVARIANTS: ACTIVE]" in result
+    assert f"[REASONING MODE: {ability.upper()}]" in result
 
 
-@pytest.mark.parametrize("ability", _EXPECTED.keys())
+@pytest.mark.parametrize("ability", _ABILITIES)
 def test_bias_field_structure(ability):
     result = build_bias_field(ability)
     assert result.startswith("BIAS FIELD")
     assert result.endswith("END BIAS FIELD")
 
 
-def test_bias_field_unknown_ability_defaults_to_balanced():
+@pytest.mark.parametrize("ability", _ABILITIES)
+def test_bias_field_contains_invariants(ability):
+    result = build_bias_field(ability)
+    assert "[INVARIANTS: ACTIVE]" in result
+
+
+@pytest.mark.parametrize("ability", _ABILITIES)
+def test_bias_field_no_old_format_tokens(ability):
+    result = build_bias_field(ability)
+    assert "[BIAS:" not in result
+    assert "[TRAJECTORY:" not in result
+    assert "[EPISTEMIC:" not in result
+
+
+def test_bias_field_unknown_ability_fallback():
     result = build_bias_field("unknown")
-    assert "[BIAS: UNKNOWN]" in result
-    assert "[TRAJECTORY: balanced]" in result
-    assert "[EPISTEMIC: neutral]" in result
+    assert "[REASONING MODE: UNKNOWN]" in result
+    assert result.startswith("BIAS FIELD")
+    assert result.endswith("END BIAS FIELD")
     assert "[INVARIANTS: ACTIVE]" in result

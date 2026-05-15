@@ -104,7 +104,7 @@ def test_preset_dry_run_uses_mapped_ability(tmp_path):
     stdout, _, exit_code = _invoke_with_file(tmp_path, "--preset", "critic", "--dry-run")
     assert exit_code == 0
     # critic maps to skeptical
-    assert "[BIAS: SKEPTICAL]" in stdout
+    assert "[REASONING MODE: SKEPTICAL]" in stdout
     assert "[PRESET: CRITIC]" in stdout
 
 
