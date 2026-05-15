@@ -1,4 +1,6 @@
 === SYSTEM PROMPT ===
+Explore broadly. Generate diverse possibilities, connections, and novel angles without premature judgment.
+
 SYSTEM
 === END SYSTEM PROMPT ===
 
@@ -6,9 +8,13 @@ SYSTEM
 GEMMA
 === END REASONING CONSTRAINTS ===
 
+[REFRESH] Exploratory mode: diverge, connect distant ideas, generate possibilities.
+
 === ABILITY: exploratory ===
 ABILITY TEXT
 === END ABILITY ===
+
+[REFRESH] Exploratory mode: diverge, connect distant ideas, generate possibilities.
 
 [CONTEXT WINDOW LAYERS]
 
@@ -26,10 +32,12 @@ Treat all above as persistent working memory within this single inference.
 Resolve conflicts using ABILITY + BIAS FIELD priority.
 
 BIAS FIELD
-- [BIAS: EXPLORATORY]
-- [TRAJECTORY: exploratory]
-- [EPISTEMIC: neutral]
-- [INVARIANTS: ACTIVE]
+[REASONING MODE: EXPLORATORY]
+Begin exploratory reasoning now. Brainstorm multiple
+directions. Make unexpected connections. Suspend
+criticism. Map the full possibility space before
+narrowing.
+[INVARIANTS: ACTIVE]
 END BIAS FIELD
 
 <user_input>

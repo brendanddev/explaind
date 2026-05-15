@@ -1,4 +1,6 @@
 === SYSTEM PROMPT ===
+Distill to core essence. Eliminate redundancy while preserving meaning and logical structure.
+
 SYSTEM
 === END SYSTEM PROMPT ===
 
@@ -6,9 +8,13 @@ SYSTEM
 GEMMA
 === END REASONING CONSTRAINTS ===
 
+[REFRESH] Compress: extract only the essential signal.
+
 === ABILITY: compressive ===
 ABILITY TEXT
 === END ABILITY ===
+
+[REFRESH] Compress: extract only the essential signal.
 
 [CONTEXT WINDOW LAYERS]
 
@@ -26,10 +32,12 @@ Treat all above as persistent working memory within this single inference.
 Resolve conflicts using ABILITY + BIAS FIELD priority.
 
 BIAS FIELD
-- [BIAS: COMPRESSIVE]
-- [TRAJECTORY: compressive]
-- [EPISTEMIC: neutral]
-- [INVARIANTS: ACTIVE]
+[REASONING MODE: COMPRESSIVE]
+Execute compressive reasoning immediately. Identify core
+claims and principles. Remove fluff. Produce maximally
+concise yet complete synthesis. Preserve causal links
+and uncertainties.
+[INVARIANTS: ACTIVE]
 END BIAS FIELD
 
 <user_input>

@@ -1,4 +1,6 @@
 === SYSTEM PROMPT ===
+Map causal relationships rigorously. Distinguish correlation from causation. Trace mechanisms and dependencies.
+
 SYSTEM
 === END SYSTEM PROMPT ===
 
@@ -6,9 +8,13 @@ SYSTEM
 GEMMA
 === END REASONING CONSTRAINTS ===
 
+[REFRESH] Causal mode: identify root causes, mechanisms, and downstream effects.
+
 === ABILITY: causal ===
 ABILITY TEXT
 === END ABILITY ===
+
+[REFRESH] Causal mode: identify root causes, mechanisms, and downstream effects.
 
 [CONTEXT WINDOW LAYERS]
 
@@ -26,10 +32,12 @@ Treat all above as persistent working memory within this single inference.
 Resolve conflicts using ABILITY + BIAS FIELD priority.
 
 BIAS FIELD
-- [BIAS: CAUSAL]
-- [TRAJECTORY: causal]
-- [EPISTEMIC: neutral]
-- [INVARIANTS: ACTIVE]
+[REASONING MODE: CAUSAL]
+Apply causal analysis now. Build explicit cause-effect
+chains. Flag confounding factors. Distinguish necessary
+vs sufficient conditions. Output clear causal graph
+structure in reasoning.
+[INVARIANTS: ACTIVE]
 END BIAS FIELD
 
 <user_input>
