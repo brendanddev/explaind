@@ -98,7 +98,7 @@ def _run_demo(args, config=None, invoker=None, export_path: str | None = None) -
             except ModelInvocationError as e:
                 print_error(f"explaind: {e}")
                 sys.exit(1)
-            print_run_header(ability, think)
+            print_run_header(ability, True)
             print_model_output(result)
             print_model_meta(config.model_name, latency_ms, ability=ability)
             demo1_runs.append({"ability": ability, "preset": None, "output": result, "duration_ms": latency_ms})
@@ -116,7 +116,7 @@ def _run_demo(args, config=None, invoker=None, export_path: str | None = None) -
     demo2_runs: list[dict] = []
     if dry_run:
         try:
-            result1, _ = run(_DEMO_2_QUESTION, ability="balanced", dry_run=True, think=think)
+            result1, _ = run(_DEMO_2_QUESTION, ability="balanced", dry_run=True, think=True)
         except ValueError as e:
             print_error(f"explaind: {e}")
             sys.exit(1)
@@ -127,7 +127,7 @@ def _run_demo(args, config=None, invoker=None, export_path: str | None = None) -
         pass2_scratchpad = _INITIAL_RESPONSE_HEADER
         try:
             result2, _ = run(
-                _DEMO_2_QUESTION, ability="skeptical", dry_run=True, think=think,
+                _DEMO_2_QUESTION, ability="skeptical", dry_run=True, think=True,
                 scratchpad=pass2_scratchpad, honest_mode=True,
             )
         except ValueError as e:
@@ -138,7 +138,7 @@ def _run_demo(args, config=None, invoker=None, export_path: str | None = None) -
         try:
             with _Spinner():
                 t0 = time.monotonic()
-                result1, _ = run(_DEMO_2_QUESTION, ability="balanced", invoker=invoker, think=think)
+                result1, _ = run(_DEMO_2_QUESTION, ability="balanced", invoker=invoker, think=True)
                 ms1 = round((time.monotonic() - t0) * 1000)
         except ValueError as e:
             print_error(f"explaind: {e}")
@@ -153,7 +153,7 @@ def _run_demo(args, config=None, invoker=None, export_path: str | None = None) -
             with _Spinner():
                 t0 = time.monotonic()
                 result2, _ = run(
-                    _DEMO_2_QUESTION, ability="skeptical", invoker=invoker, think=think,
+                    _DEMO_2_QUESTION, ability="skeptical", invoker=invoker, think=True,
                     scratchpad=_audit_block, honest_mode=True,
                 )
                 ms2 = round((time.monotonic() - t0) * 1000)
@@ -188,7 +188,7 @@ def _run_demo(args, config=None, invoker=None, export_path: str | None = None) -
     demo3_runs: list[dict] = []
     if dry_run:
         try:
-            result, _ = run(_DEMO_3_QUESTION, ability="calibrator", dry_run=True, think=think)
+            result, _ = run(_DEMO_3_QUESTION, ability="calibrator", dry_run=True, think=True)
         except ValueError as e:
             print_error(f"explaind: {e}")
             sys.exit(1)
@@ -197,7 +197,7 @@ def _run_demo(args, config=None, invoker=None, export_path: str | None = None) -
         try:
             with _Spinner():
                 t0 = time.monotonic()
-                result, _ = run(_DEMO_3_QUESTION, ability="calibrator", invoker=invoker, think=think)
+                result, _ = run(_DEMO_3_QUESTION, ability="calibrator", invoker=invoker, think=True)
                 latency_ms = round((time.monotonic() - t0) * 1000)
         except ValueError as e:
             print_error(f"explaind: {e}")
@@ -205,7 +205,7 @@ def _run_demo(args, config=None, invoker=None, export_path: str | None = None) -
         except ModelInvocationError as e:
             print_error(f"explaind: {e}")
             sys.exit(1)
-        print_run_header("calibrator", think)
+        print_run_header("calibrator", True)
         print_model_output(result)
         print_model_meta(config.model_name, latency_ms, ability="calibrator")
         demo3_runs = [{"ability": "calibrator", "preset": None, "output": result, "duration_ms": latency_ms}]
