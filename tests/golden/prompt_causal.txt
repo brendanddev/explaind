@@ -1,0 +1,48 @@
+<start_of_turn>user
+=== SYSTEM PROMPT ===
+Map causal relationships rigorously. Distinguish correlation from causation. Trace mechanisms and dependencies.
+
+SYSTEM
+=== END SYSTEM PROMPT ===
+
+=== REASONING CONSTRAINTS ===
+GEMMA
+=== END REASONING CONSTRAINTS ===
+
+[REFRESH] Check: have I named the mechanism by which the preceding event produced the next, or have I only stated that it preceded it? If only sequence, name the mechanism now.
+
+=== ABILITY: causal ===
+ABILITY TEXT
+=== END ABILITY ===
+
+[REFRESH] Check: have I named the mechanism by which the preceding event produced the next, or have I only stated that it preceded it? If only sequence, name the mechanism now.
+
+[CONTEXT WINDOW LAYERS]
+
+[SCRATCHPAD]
+none
+
+[REASONING TRACE]
+none
+
+[COMPETING INTERPRETATIONS]
+none
+
+[CONTEXT INSTRUCTION]
+Treat all above as persistent working memory within this single inference.
+Resolve conflicts using ABILITY + BIAS FIELD priority.
+
+BIAS FIELD
+[REASONING MODE: CAUSAL]
+Apply causal analysis now. Build explicit cause-effect
+chains. Flag confounding factors. Distinguish necessary
+vs sufficient conditions. Output clear causal graph
+structure in reasoning.
+[INVARIANTS: ACTIVE]
+END BIAS FIELD
+
+<user_input>
+USER INPUT
+</user_input>
+<end_of_turn>
+<start_of_turn>model

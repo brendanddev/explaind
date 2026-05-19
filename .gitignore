@@ -11,3 +11,9 @@ Thumbs.db
 *.log
 .env
 *.gguf
+CLAUDE.md
+*.egg-info/
+*.egg-info
+.dev/
+/traces/
+AGENTS.md

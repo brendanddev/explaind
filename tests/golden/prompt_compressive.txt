@@ -1,0 +1,48 @@
+<start_of_turn>user
+=== SYSTEM PROMPT ===
+Distill to core essence. Eliminate redundancy while preserving meaning and logical structure.
+
+SYSTEM
+=== END SYSTEM PROMPT ===
+
+=== REASONING CONSTRAINTS ===
+GEMMA
+=== END REASONING CONSTRAINTS ===
+
+[REFRESH] Check: does the last sentence I wrote advance the conclusion, or does it restate what is already established? If restate, delete it and continue.
+
+=== ABILITY: compressive ===
+ABILITY TEXT
+=== END ABILITY ===
+
+[REFRESH] Check: does the last sentence I wrote advance the conclusion, or does it restate what is already established? If restate, delete it and continue.
+
+[CONTEXT WINDOW LAYERS]
+
+[SCRATCHPAD]
+none
+
+[REASONING TRACE]
+none
+
+[COMPETING INTERPRETATIONS]
+none
+
+[CONTEXT INSTRUCTION]
+Treat all above as persistent working memory within this single inference.
+Resolve conflicts using ABILITY + BIAS FIELD priority.
+
+BIAS FIELD
+[REASONING MODE: COMPRESSIVE]
+Execute compressive reasoning immediately. Identify core
+claims and principles. Remove fluff. Produce maximally
+concise yet complete synthesis. Preserve causal links
+and uncertainties.
+[INVARIANTS: ACTIVE]
+END BIAS FIELD
+
+<user_input>
+USER INPUT
+</user_input>
+<end_of_turn>
+<start_of_turn>model

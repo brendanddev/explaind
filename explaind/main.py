@@ -1,41 +1,95 @@
-import sys
-import ollama
-from explaind.prompts import SYSTEM_PROMPT
+from __future__ import annotations
 
-MODEL = "gemma4-e2b_q4_k_m:latest"
+from pathlib import Path
 
-def load_input(path: str | None):
-    if path:
-        with open(path, "r") as f:
-            return f.read()
-    return sys.stdin.read()
+from explaind.context import build_context_window_block
+from explaind.gemma import load_gemma_md
+from explaind.invoker import ModelInvoker
+from explaind.prompts import SYSTEM_PROMPT, assemble_prompt, build_bias_field, format_ability
+from explaind.trace import PromptTrace
 
-def build_prompt(log_text: str) -> str:
-    return f"""
-Analyze this failure:
+ABILITIES_DIR = Path("abilities")
 
-=== LOG ===
-{log_text}
+ALLOWED_ABILITIES = {
+    "balanced",
+    "skeptical",
+    "causal",
+    "compressive",
+    "exploratory",
+    "calibrator",
+    "devil",
+    "updater",
+}
 
-TASK:
-1. Identify root cause
-2. Explain causal chain
-3. Suggest fix
-"""
 
-def run_model(prompt: str) -> str:
-    response = ollama.chat(
-        model=MODEL,
-        messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": prompt},
-        ],
+def load_ability(name: str) -> str:
+    if name not in ALLOWED_ABILITIES:
+        allowed = ", ".join(sorted(ALLOWED_ABILITIES))
+        raise ValueError(f"unknown ability '{name}' (allowed: {allowed})")
+    path = ABILITIES_DIR / f"{name}.md"
+    try:
+        return path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        raise ValueError(f"ability file missing: {path}")
+
+
+def run(
+    input_text: str,
+    ability: str | None = None,
+    dry_run: bool = False,
+    invoker: ModelInvoker | None = None,
+    trace: bool = False,
+    think: bool = False,
+    scratchpad: str | None = None,
+    context: str | None = None,
+    preset_name: str | None = None,
+    scaffold_context: str | None = None,
+    honest_mode: bool = False,
+) -> tuple[str, PromptTrace | None]:
+    """Assemble prompt and invoke the model.
+
+    invoker must be provided when dry_run=False.
+    Returns (result_text, PromptTrace) — PromptTrace is None when trace=False.
+    scratchpad and context, when provided, are injected into the context window.
+    preset_name, when provided, adds a [PRESET: NAME] marker to the bias field.
+    scaffold_context, when provided, is injected between context window and bias field.
+    honest_mode, when True and ability is skeptical, adds audit tokens to the bias field.
+    """
+    gemma_md = load_gemma_md()
+
+    ability_content = load_ability(ability) if ability else None
+    formatted_ability = format_ability(ability, ability_content) if ability_content else None
+
+    context_window = build_context_window_block()
+    bias_field = build_bias_field(ability or "balanced", preset_name=preset_name, honest_mode=honest_mode)
+
+    full_prompt = assemble_prompt(
+        system=SYSTEM_PROMPT,
+        gemma_md=gemma_md,
+        ability=formatted_ability,
+        context_window=context_window,
+        bias_field=bias_field,
+        user_input=input_text,
+        think=think,
+        scratchpad=scratchpad,
+        context=context,
+        scaffold_context=scaffold_context,
     )
 
-    return response["message"]["content"]
+    prompt_trace = PromptTrace(
+        gemma_present=gemma_md is not None,
+        ability_name=ability,
+        prompt_char_count=len(full_prompt),
+        user_input_length=len(input_text),
+        think=think,
+        scratchpad_len=len(scratchpad) if scratchpad is not None else None,
+        context_len=len(context) if context is not None else None,
+    ) if trace else None
 
+    if dry_run:
+        return full_prompt, prompt_trace
 
-def run(file: str | None):
-    log_text = load_input(file)
-    prompt = build_prompt(log_text)
-    return run_model(prompt)
+    if invoker is None:
+        raise ValueError("invoker is required when dry_run=False")
+
+    return invoker.invoke(full_prompt), prompt_trace

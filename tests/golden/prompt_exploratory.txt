@@ -1,0 +1,48 @@
+<start_of_turn>user
+=== SYSTEM PROMPT ===
+At each step ask: what would this look like from a completely different starting assumption? Pursue that. Do not return to the obvious framing.
+
+SYSTEM
+=== END SYSTEM PROMPT ===
+
+=== REASONING CONSTRAINTS ===
+GEMMA
+=== END REASONING CONSTRAINTS ===
+
+[REFRESH] Ask: what assumption in my current reasoning could be inverted? Follow that inversion.
+
+=== ABILITY: exploratory ===
+ABILITY TEXT
+=== END ABILITY ===
+
+[REFRESH] Ask: what assumption in my current reasoning could be inverted? Follow that inversion.
+
+[CONTEXT WINDOW LAYERS]
+
+[SCRATCHPAD]
+none
+
+[REASONING TRACE]
+none
+
+[COMPETING INTERPRETATIONS]
+none
+
+[CONTEXT INSTRUCTION]
+Treat all above as persistent working memory within this single inference.
+Resolve conflicts using ABILITY + BIAS FIELD priority.
+
+BIAS FIELD
+[REASONING MODE: EXPLORATORY]
+Begin exploratory reasoning now. Brainstorm multiple
+directions. Make unexpected connections. Suspend
+criticism. Map the full possibility space before
+narrowing.
+[INVARIANTS: ACTIVE]
+END BIAS FIELD
+
+<user_input>
+USER INPUT
+</user_input>
+<end_of_turn>
+<start_of_turn>model

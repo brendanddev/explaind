@@ -1,6 +1,19 @@
 [project]
 name = "explaind"
-version = "0.1.0"
-description = "Local-first debugging CLI powered by Gemma 4"
+version = "0.7.3"
+description = "Local CLI for steering Gemma 4 reasoning using structured prompt biases and ability-based cognitive control."
 readme = "README.md"
 requires-python = ">=3.11"
+dependencies = [
+    "ollama",
+    "rich>=13.0",
+]
+
+[project.scripts]
+explaind = "explaind.cli:main"
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
