@@ -78,7 +78,7 @@ def _run_demo(args, config=None, invoker=None, export_path: str | None = None) -
     for ability in ("skeptical", "causal", "devil"):
         if dry_run:
             try:
-                result, _ = run(_DEMO_1_QUESTION, ability=ability, dry_run=True, think=think)
+                result, _ = run(_DEMO_1_QUESTION, ability=ability, dry_run=True, think=True)
             except ValueError as e:
                 print_error(f"explaind: {e}")
                 sys.exit(1)
@@ -90,7 +90,7 @@ def _run_demo(args, config=None, invoker=None, export_path: str | None = None) -
             try:
                 with _Spinner():
                     t0 = time.monotonic()
-                    result, _ = run(_DEMO_1_QUESTION, ability=ability, invoker=invoker, think=think)
+                    result, _ = run(_DEMO_1_QUESTION, ability=ability, invoker=invoker, think=True)
                     latency_ms = round((time.monotonic() - t0) * 1000)
             except ValueError as e:
                 print_error(f"explaind: {e}")
