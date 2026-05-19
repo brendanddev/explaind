@@ -6,9 +6,9 @@ import argparse
 from datetime import datetime
 from pathlib import Path
 
-from explaind.color import print_about, print_chain_header, print_chain_meta, print_chain_separator, print_compare_header, print_consensus_progress, print_consensus_report, print_error, print_examples, print_export_confirmation, print_honest_header, print_honest_meta, print_honest_separator, print_list_abilities, print_model_meta, print_model_output, print_run_header, print_scaffold_status, print_scaffold_summary, print_warning
+from explaind.color import print_about, print_chain_header, print_chain_meta, print_chain_separator, print_compare_header, print_consensus_progress, print_consensus_report, print_demo_between, print_demo_footer, print_demo_section_header, print_error, print_examples, print_export_confirmation, print_honest_header, print_honest_meta, print_honest_separator, print_list_abilities, print_model_meta, print_model_output, print_run_header, print_scaffold_status, print_scaffold_summary, print_warning
 from explaind.consensus import run_consensus
-from explaind.exporter import build_export
+from explaind.exporter import build_demo_export, build_export
 from explaind.scaffold import build_initial_scaffold, parse_scaffold_update, scaffold_to_export_summary, scaffold_to_injection
 from explaind.config import DEFAULTS, load_config
 from explaind.errors import ConfigError, InputError, ModelInvocationError
@@ -55,6 +55,176 @@ _AUDIT_FOOTER = (
     "\n\nApply full skeptical specification to this audit.\n"
     "Do not summarise. Do not soften. Surface failures."
 )
+
+
+_DEMO_1_QUESTION = "Was the 2008 financial crisis preventable?"
+_DEMO_2_QUESTION = "AI will eliminate most jobs within 10 years."
+_DEMO_3_QUESTION = "Is the scientific consensus on climate change settled?"
+
+
+def _run_demo(args, config=None, invoker=None, export_path: str | None = None) -> None:
+    think = args.think
+    dry_run = args.dry_run
+
+    # ── Demo 1: Compare ──────────────────────────────────────────────────────
+    print_demo_section_header(
+        1, 3,
+        "Reasoning trajectory control — same question, three cognitive modes",
+        _DEMO_1_QUESTION,
+        "explaind --compare skeptical causal devil",
+    )
+
+    demo1_runs: list[dict] = []
+    for ability in ("skeptical", "causal", "devil"):
+        if dry_run:
+            try:
+                result, _ = run(_DEMO_1_QUESTION, ability=ability, dry_run=True, think=think)
+            except ValueError as e:
+                print_error(f"explaind: {e}")
+                sys.exit(1)
+            print_compare_header(ability)
+            print()
+            print(result)
+            print()
+        else:
+            try:
+                with _Spinner():
+                    t0 = time.monotonic()
+                    result, _ = run(_DEMO_1_QUESTION, ability=ability, invoker=invoker, think=think)
+                    latency_ms = round((time.monotonic() - t0) * 1000)
+            except ValueError as e:
+                print_error(f"explaind: {e}")
+                sys.exit(1)
+            except ModelInvocationError as e:
+                print_error(f"explaind: {e}")
+                sys.exit(1)
+            print_run_header(ability, think)
+            print_model_output(result)
+            print_model_meta(config.model_name, latency_ms, ability=ability)
+            demo1_runs.append({"ability": ability, "preset": None, "output": result, "duration_ms": latency_ms})
+
+    print_demo_between(1)
+
+    # ── Demo 2: Honest mode ──────────────────────────────────────────────────
+    print_demo_section_header(
+        2, 3,
+        "Self-critique — balanced reasoning then skeptical audit",
+        _DEMO_2_QUESTION,
+        "explaind --honest --think",
+    )
+
+    demo2_runs: list[dict] = []
+    if dry_run:
+        try:
+            result1, _ = run(_DEMO_2_QUESTION, ability="balanced", dry_run=True, think=think)
+        except ValueError as e:
+            print_error(f"explaind: {e}")
+            sys.exit(1)
+        print(result1)
+        print()
+        print("--- [honest mode: pass 2 (skeptical)] ---")
+        print()
+        pass2_scratchpad = _INITIAL_RESPONSE_HEADER
+        try:
+            result2, _ = run(
+                _DEMO_2_QUESTION, ability="skeptical", dry_run=True, think=think,
+                scratchpad=pass2_scratchpad, honest_mode=True,
+            )
+        except ValueError as e:
+            print_error(f"explaind: {e}")
+            sys.exit(1)
+        print(result2)
+    else:
+        try:
+            with _Spinner():
+                t0 = time.monotonic()
+                result1, _ = run(_DEMO_2_QUESTION, ability="balanced", invoker=invoker, think=think)
+                ms1 = round((time.monotonic() - t0) * 1000)
+        except ValueError as e:
+            print_error(f"explaind: {e}")
+            sys.exit(1)
+        except ModelInvocationError as e:
+            print_error(f"explaind: {e}")
+            sys.exit(1)
+
+        _audit_block = _INITIAL_RESPONSE_HEADER + "\n" + result1 + _AUDIT_FOOTER
+
+        try:
+            with _Spinner():
+                t0 = time.monotonic()
+                result2, _ = run(
+                    _DEMO_2_QUESTION, ability="skeptical", invoker=invoker, think=think,
+                    scratchpad=_audit_block, honest_mode=True,
+                )
+                ms2 = round((time.monotonic() - t0) * 1000)
+        except ValueError as e:
+            print_error(f"explaind: {e}")
+            sys.exit(1)
+        except ModelInvocationError as e:
+            print_error(f"explaind: {e}")
+            sys.exit(1)
+
+        print_honest_header()
+        print_honest_separator("Initial Response")
+        print_model_output(result1)
+        print_honest_separator("Self-Critique")
+        print_model_output(result2)
+        print_honest_meta(config.model_name, ms1, ms2)
+        demo2_runs = [
+            {"ability": "balanced", "label": "Initial Response", "preset": None, "output": result1, "duration_ms": ms1},
+            {"ability": "skeptical", "label": "Self-Critique", "preset": None, "output": result2, "duration_ms": ms2},
+        ]
+
+    print_demo_between(2)
+
+    # ── Demo 3: Calibrator ───────────────────────────────────────────────────
+    print_demo_section_header(
+        3, 3,
+        "Calibrated reasoning — explicit confidence scoring and falsification",
+        _DEMO_3_QUESTION,
+        "explaind --ability calibrator --think",
+    )
+
+    demo3_runs: list[dict] = []
+    if dry_run:
+        try:
+            result, _ = run(_DEMO_3_QUESTION, ability="calibrator", dry_run=True, think=think)
+        except ValueError as e:
+            print_error(f"explaind: {e}")
+            sys.exit(1)
+        print(result)
+    else:
+        try:
+            with _Spinner():
+                t0 = time.monotonic()
+                result, _ = run(_DEMO_3_QUESTION, ability="calibrator", invoker=invoker, think=think)
+                latency_ms = round((time.monotonic() - t0) * 1000)
+        except ValueError as e:
+            print_error(f"explaind: {e}")
+            sys.exit(1)
+        except ModelInvocationError as e:
+            print_error(f"explaind: {e}")
+            sys.exit(1)
+        print_run_header("calibrator", think)
+        print_model_output(result)
+        print_model_meta(config.model_name, latency_ms, ability="calibrator")
+        demo3_runs = [{"ability": "calibrator", "preset": None, "output": result, "duration_ms": latency_ms}]
+
+    print_demo_footer()
+
+    # ── Export ───────────────────────────────────────────────────────────────
+    if export_path and not dry_run:
+        sections = [
+            {"title": "Demo 1 — Ability Differentiation", "question": _DEMO_1_QUESTION, "runs": demo1_runs},
+            {"title": "Demo 2 — Self-Critique (Honest Mode)", "question": _DEMO_2_QUESTION, "runs": demo2_runs},
+            {"title": "Demo 3 — Calibrated Epistemic Reasoning", "question": _DEMO_3_QUESTION, "runs": demo3_runs},
+        ]
+        md = build_demo_export(sections, config.model_name, think)
+        try:
+            Path(export_path).write_text(md, encoding="utf-8")
+            print_export_confirmation(export_path)
+        except OSError as e:
+            print_warning(f"explaind: export failed: {e}")
 
 
 class _Spinner:
@@ -238,6 +408,16 @@ def main():
         metavar="N",
         help="run the same prompt N times (2-10) and surface the most consistent answer",
     )
+    parser.add_argument(
+        "--demo",
+        action="store_true",
+        default=False,
+        help=(
+            "self-contained demonstration: runs three curated demonstrations "
+            "(ability comparison, honest mode self-critique, calibrated reasoning). "
+            "No input required. Compatible with --dry-run, --think, --export."
+        ),
+    )
     args = parser.parse_args()
 
     export_path: str | None = None
@@ -267,6 +447,48 @@ def main():
         _info_handled = True
     if _info_handled:
         sys.exit(0)
+
+    # --- demo mode ---
+    if args.demo:
+        _demo_conflicts = [
+            (args.ability, "--ability"),
+            (bool(args.compare), "--compare"),
+            (bool(args.chain), "--chain"),
+            (args.honest, "--honest"),
+            (args.consensus is not None, "--consensus"),
+            (args.preset, "--preset"),
+            (args.file_flag, "--file"),
+            (args.scaffold, "--scaffold"),
+        ]
+        for flag_active, flag_name in _demo_conflicts:
+            if flag_active:
+                print_error(
+                    "--demo runs a self-contained demonstration. "
+                    "Remove other flags to use --demo."
+                )
+                sys.exit(1)
+
+        demo_export_path: str | None = None
+        if args.export is True:
+            demo_export_path = datetime.now().strftime("explaind_demo_%Y%m%d_%H%M%S.md")
+        elif args.export:
+            demo_export_path = args.export
+
+        if args.dry_run:
+            _run_demo(args)
+        else:
+            try:
+                config = load_config()
+            except ConfigError as e:
+                print_error(f"explaind: {e}")
+                sys.exit(1)
+            try:
+                invoker = build_invoker(config)
+            except ConfigError as e:
+                print_error(f"explaind: {e}")
+                sys.exit(1)
+            _run_demo(args, config=config, invoker=invoker, export_path=demo_export_path)
+        return
 
     # --preset, --ability, --compare are mutually exclusive
     if args.preset and args.ability:

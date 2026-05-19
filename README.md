@@ -424,6 +424,12 @@ The CLI has several distinct execution modes:
 | `--dry-run` | Prints the assembled prompt instead of calling the model. In consensus mode it prints the prompt once plus a note. In honest and chain modes it prints prompt blocks, not simulated model outputs. | Prompt observability | All runtime modes | `echo "Inspect me" | explaind --ability devil --dry-run` |
 | `--trace` | Prints a prompt-construction trace to stderr, including model settings, prompt size, layer presence, and scratchpad/context lengths. | Observability | All runtime modes except listing commands | `echo "Inspect me" | explaind --ability updater --trace --dry-run` |
 | `--list-presets` | Prints all six presets and exits without requiring input. | - | Standalone listing command | `explaind --list-presets` |
+| `--demo` | Self-contained demonstration. Runs three curated demonstrations: ability comparison across skeptical, causal, and devil modes; honest mode self-critique with thinking; and calibrated epistemic reasoning. No input required. | - | `--dry-run`, `--think`, `--export`; not with `--ability`, `--compare`, `--chain`, `--honest`, `--consensus`, `--preset`, `--file`, `--scaffold` | `explaind --demo` |
+
+Usage:
+  explaind --demo
+  explaind --demo --dry-run
+  explaind --demo --export
 
 ### Planned but not implemented
 

@@ -380,6 +380,87 @@ def print_about() -> None:
     console.print(t)
 
 
+_DEMO_BORDER = "━" * 52
+
+
+def print_demo_section_header(num: int, total: int, title: str, question: str, command: str) -> None:
+    console = _stdout_console()
+    if not console.is_terminal:
+        print(_DEMO_BORDER)
+        print(f"  Demo {num}/{total} — {title}")
+        print()
+        print(f'  Question: "{question}"')
+        print(f"  Command:  {command}")
+        print(_DEMO_BORDER)
+        return
+
+    t = Text()
+    t.append(_DEMO_BORDER + "\n", style="dim")
+    t.append(f"  Demo {num}/{total}", style="bold")
+    t.append(f" — {title}\n", style="bold white")
+    t.append("\n")
+    t.append(f'  Question: "{question}"\n', style="dim")
+    t.append("  Command:  ", style="dim")
+    t.append(command + "\n", style="dim cyan")
+    t.append(_DEMO_BORDER, style="dim")
+    console.print(t)
+
+
+def print_demo_between(demo_num: int) -> None:
+    console = _stdout_console()
+    msg = f"  ── continuing to Demo {demo_num + 1}/3 ──────────────────────"
+    if console.is_terminal:
+        console.print(msg, style="dim", markup=False)
+    else:
+        print(msg)
+
+
+def print_demo_footer() -> None:
+    console = _stdout_console()
+    if not console.is_terminal:
+        print(_DEMO_BORDER)
+        print("  Demo complete.")
+        print()
+        print("  What you just saw:")
+        print("    Demo 1 — Same question steered through three")
+        print("             reasoning modes (skeptical, causal, devil)")
+        print("    Demo 2 — Gemma 4 critiquing its own reasoning")
+        print("             under epistemic pressure")
+        print("    Demo 3 — Explicit confidence calibration with")
+        print("             falsification conditions")
+        print()
+        print("  Try your own:")
+        print('    echo "your question" | explaind --compare skeptical causal devil')
+        print('    echo "your question" | explaind --honest --think')
+        print('    echo "your question" | explaind --ability calibrator')
+        print('    echo "your question" | explaind --chain causal compressive skeptical')
+        print()
+        print("  Run --about for architecture overview.")
+        print("  Run --examples for full command reference.")
+        print(_DEMO_BORDER)
+        return
+
+    t = Text()
+    t.append(_DEMO_BORDER + "\n", style="dim")
+    t.append("  Demo complete.\n\n", style="bold white")
+    t.append("  What you just saw:\n", style="bold")
+    t.append("    Demo 1 — Same question steered through three\n", style="dim")
+    t.append("             reasoning modes (skeptical, causal, devil)\n", style="dim")
+    t.append("    Demo 2 — Gemma 4 critiquing its own reasoning\n", style="dim")
+    t.append("             under epistemic pressure\n", style="dim")
+    t.append("    Demo 3 — Explicit confidence calibration with\n", style="dim")
+    t.append("             falsification conditions\n\n", style="dim")
+    t.append("  Try your own:\n", style="bold")
+    t.append('    echo "your question" | explaind --compare skeptical causal devil\n', style="dim cyan")
+    t.append('    echo "your question" | explaind --honest --think\n', style="dim cyan")
+    t.append('    echo "your question" | explaind --ability calibrator\n', style="dim cyan")
+    t.append('    echo "your question" | explaind --chain causal compressive skeptical\n\n', style="dim cyan")
+    t.append("  Run --about for architecture overview.\n", style="dim")
+    t.append("  Run --examples for full command reference.\n", style="dim")
+    t.append(_DEMO_BORDER, style="dim")
+    console.print(t)
+
+
 def print_consensus_report(report: dict) -> None:
     n = report["n"]
     agreement = report["agreement"]
