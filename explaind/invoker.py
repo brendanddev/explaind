@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import urllib.error
 import urllib.request
 
@@ -9,6 +10,30 @@ from explaind.errors import ConfigError, ModelInvocationError
 
 _OLLAMA_URL = "http://localhost:11434/api/generate"
 
+# More-specific tokens must come before their prefixes to avoid partial matches.
+_GEMMA_SPECIAL_TOKENS = [
+    "<start_of_turn>user",
+    "<start_of_turn>model",
+    "<start_of_turn>",
+    "</start_of_turn>",
+    "<end_of_turn>",
+    "</end_of_turn>",
+    "<|channel>thought",
+    "<channel|>",
+    "<|tool_response>",
+    "<eos>",
+]
+
+
+def _strip_gemma_output(text: str, strip_thinking: bool = True) -> str:
+    if strip_thinking:
+        text = re.sub(r"<\|channel>thought.*?<channel\|>", "", text, flags=re.DOTALL)
+    for token in _GEMMA_SPECIAL_TOKENS:
+        text = text.replace(token, "")
+    text = re.sub(r"(?m)^model\n", "", text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.strip()
+
 
 class ModelInvoker:
     def invoke(self, prompt: str) -> str:
@@ -16,10 +41,11 @@ class ModelInvoker:
 
 
 class OllamaInvoker(ModelInvoker):
-    def __init__(self, model: str, temperature: float, max_tokens: int) -> None:
+    def __init__(self, model: str, temperature: float, max_tokens: int, strip_thinking: bool = True) -> None:
         self._model = model
         self._temperature = temperature
         self._max_tokens = max_tokens
+        self._strip_thinking = strip_thinking
 
     def invoke(self, prompt: str) -> str:
         payload = json.dumps({
@@ -49,9 +75,11 @@ class OllamaInvoker(ModelInvoker):
             raise ModelInvocationError(f"Ollama request failed: {exc}")
 
         try:
-            return body["response"]
+            raw = body["response"]
         except (KeyError, TypeError):
             raise ModelInvocationError("Ollama response missing 'response' field")
+
+        return _strip_gemma_output(raw, strip_thinking=self._strip_thinking)
 
 
 class LlamaCppInvoker(ModelInvoker):

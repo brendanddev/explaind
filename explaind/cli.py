@@ -33,12 +33,28 @@ def _chain_handoff_header(prev_ability: str, next_ability: str) -> str:
 
 
 _INITIAL_RESPONSE_HEADER = """\
-[INITIAL RESPONSE — under review]
-The following is a first-pass response to the question.
-Apply full epistemic pressure. Interrogate every claim.
-Surface assumptions. Identify where confidence outruns
-evidence. Do not summarise — critique.\
+[HONEST MODE — SKEPTICAL AUDIT]
+The following is a FIRST PASS RESPONSE that requires
+full skeptical interrogation.
+
+AUDIT REQUIREMENTS:
+1. Identify every claim in the initial response that
+   is asserted without adequate evidential support
+2. Name every assumption the initial response inherits
+   without questioning
+3. Find where the initial response converges to a
+   comfortable conclusion prematurely
+4. State explicitly where confidence in the initial
+   response outruns the evidence it cites
+5. Do NOT reproduce the initial response — interrogate it
+
+INITIAL RESPONSE TO AUDIT:\
 """
+
+_AUDIT_FOOTER = (
+    "\n\nApply full skeptical specification to this audit.\n"
+    "Do not summarise. Do not soften. Surface failures."
+)
 
 
 class _Spinner:
@@ -394,6 +410,7 @@ def main():
                     think=args.think,
                     scratchpad=pass2_scratchpad,
                     context=context_content,
+                    honest_mode=True,
                 )
             except ValueError as e:
                 print_error(f"explaind: {e}")
@@ -436,9 +453,10 @@ def main():
             print_error(f"explaind: {e}")
             sys.exit(1)
 
-        pass2_scratchpad = _INITIAL_RESPONSE_HEADER + "\n\n" + result1
+        _audit_block = _INITIAL_RESPONSE_HEADER + "\n" + result1 + _AUDIT_FOOTER
+        pass2_scratchpad = _audit_block
         if scratchpad_content:
-            pass2_scratchpad = scratchpad_content + "\n\n" + _INITIAL_RESPONSE_HEADER + "\n\n" + result1
+            pass2_scratchpad = scratchpad_content + "\n\n" + _audit_block
 
         try:
             with _Spinner():
@@ -451,6 +469,7 @@ def main():
                     think=args.think,
                     scratchpad=pass2_scratchpad,
                     context=context_content,
+                    honest_mode=True,
                 )
                 ms2 = round((time.monotonic() - t0) * 1000)
         except ValueError as e:

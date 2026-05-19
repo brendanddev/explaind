@@ -75,11 +75,11 @@ def test_honest_dry_run_two_prompt_blocks(tmp_path):
     assert stdout.count("=== SYSTEM PROMPT ===") == 2
 
 
-# 2. pass 2 scratchpad contains [INITIAL RESPONSE — under review] header
+# 2. pass 2 scratchpad contains [HONEST MODE — SKEPTICAL AUDIT] header
 def test_honest_pass2_scratchpad_contains_initial_response_header(tmp_path):
     stdout, _, exit_code = _invoke(tmp_path, "--honest", "--dry-run")
     assert exit_code == 0
-    assert "[INITIAL RESPONSE — under review]" in stdout
+    assert "[HONEST MODE — SKEPTICAL AUDIT]" in stdout
 
 
 # 3. pass 2 uses skeptical ability regardless of --ability flag
@@ -129,9 +129,9 @@ def test_honest_user_scratchpad_before_initial_response(tmp_path):
     )
     assert exit_code == 0
     assert "USER SCRATCHPAD CONTENT HERE" in stdout
-    assert "[INITIAL RESPONSE — under review]" in stdout
+    assert "[HONEST MODE — SKEPTICAL AUDIT]" in stdout
     user_pos = stdout.index("USER SCRATCHPAD CONTENT HERE")
-    header_pos = stdout.index("[INITIAL RESPONSE — under review]")
+    header_pos = stdout.index("[HONEST MODE — SKEPTICAL AUDIT]")
     assert user_pos < header_pos
 
 
@@ -168,3 +168,25 @@ def test_honest_export_two_labelled_sections(tmp_path):
     content = export_file.read_text(encoding="utf-8")
     assert "## Initial Response" in content
     assert "## Self-Critique" in content
+
+
+# 10. pass 2 scratchpad contains [HONEST MODE — SKEPTICAL AUDIT] header
+def test_honest_pass2_scratchpad_contains_audit_header(tmp_path):
+    stdout, _, exit_code = _invoke(tmp_path, "--honest", "--dry-run")
+    assert exit_code == 0
+    assert "[HONEST MODE — SKEPTICAL AUDIT]" in stdout
+
+
+# 11. pass 2 scratchpad contains numbered audit requirements 1-5
+def test_honest_pass2_scratchpad_contains_numbered_requirements(tmp_path):
+    stdout, _, exit_code = _invoke(tmp_path, "--honest", "--dry-run")
+    assert exit_code == 0
+    for i in range(1, 6):
+        assert f"{i}." in stdout
+
+
+# 12. honest mode assembled prompt contains [AUDIT MODE: ACTIVE]
+def test_honest_assembled_prompt_contains_audit_mode(tmp_path):
+    stdout, _, exit_code = _invoke(tmp_path, "--honest", "--dry-run")
+    assert exit_code == 0
+    assert "[AUDIT MODE: ACTIVE]" in stdout

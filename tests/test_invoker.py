@@ -100,6 +100,56 @@ def test_ollama_invoker_missing_response_key_raises():
 
 
 # ---------------------------------------------------------------------------
+# OllamaInvoker — Gemma 4 special-token stripping
+# ---------------------------------------------------------------------------
+
+def test_ollama_invoker_strips_eos_token():
+    invoker = OllamaInvoker(model="test-model", temperature=0.0, max_tokens=128)
+    with patch("explaind.invoker.urllib.request.urlopen") as mock_open:
+        mock_open.return_value = _mock_response("hello<eos> world")
+        result = invoker.invoke("prompt")
+    assert "<eos>" not in result
+    assert "hello" in result
+    assert "world" in result
+
+
+def test_ollama_invoker_strips_end_of_turn_token():
+    invoker = OllamaInvoker(model="test-model", temperature=0.0, max_tokens=128)
+    with patch("explaind.invoker.urllib.request.urlopen") as mock_open:
+        mock_open.return_value = _mock_response("hello</start_of_turn> world")
+        result = invoker.invoke("prompt")
+    assert "</start_of_turn>" not in result
+
+
+def test_ollama_invoker_strips_tool_response_token():
+    invoker = OllamaInvoker(model="test-model", temperature=0.0, max_tokens=128)
+    with patch("explaind.invoker.urllib.request.urlopen") as mock_open:
+        mock_open.return_value = _mock_response("answer<|tool_response>garbage")
+        result = invoker.invoke("prompt")
+    assert "<|tool_response>" not in result
+
+
+def test_ollama_invoker_strip_thinking_false_preserves_content():
+    invoker = OllamaInvoker(model="test-model", temperature=0.0, max_tokens=128, strip_thinking=False)
+    with patch("explaind.invoker.urllib.request.urlopen") as mock_open:
+        mock_open.return_value = _mock_response("before<|channel>thoughtinner content<channel|>after")
+        result = invoker.invoke("prompt")
+    assert "inner content" in result
+    assert "<|channel>thought" not in result
+    assert "<channel|>" not in result
+
+
+def test_ollama_invoker_strip_thinking_true_removes_trace():
+    invoker = OllamaInvoker(model="test-model", temperature=0.0, max_tokens=128)
+    with patch("explaind.invoker.urllib.request.urlopen") as mock_open:
+        mock_open.return_value = _mock_response("before<|channel>thoughtinner content<channel|>after")
+        result = invoker.invoke("prompt")
+    assert "inner content" not in result
+    assert "<|channel>thought" not in result
+    assert "<channel|>" not in result
+
+
+# ---------------------------------------------------------------------------
 # LlamaCppInvoker
 # ---------------------------------------------------------------------------
 

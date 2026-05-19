@@ -1,6 +1,6 @@
 [project]
 name = "explaind"
-version = "0.6.2"
+version = "0.7.3"
 description = "Local CLI for steering Gemma 4 reasoning using structured prompt biases and ability-based cognitive control."
 readme = "README.md"
 requires-python = ">=3.11"

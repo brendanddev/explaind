@@ -44,6 +44,7 @@ def run(
     context: str | None = None,
     preset_name: str | None = None,
     scaffold_context: str | None = None,
+    honest_mode: bool = False,
 ) -> tuple[str, PromptTrace | None]:
     """Assemble prompt and invoke the model.
 
@@ -52,6 +53,7 @@ def run(
     scratchpad and context, when provided, are injected into the context window.
     preset_name, when provided, adds a [PRESET: NAME] marker to the bias field.
     scaffold_context, when provided, is injected between context window and bias field.
+    honest_mode, when True and ability is skeptical, adds audit tokens to the bias field.
     """
     gemma_md = load_gemma_md()
 
@@ -59,7 +61,7 @@ def run(
     formatted_ability = format_ability(ability, ability_content) if ability_content else None
 
     context_window = build_context_window_block()
-    bias_field = build_bias_field(ability or "balanced", preset_name=preset_name)
+    bias_field = build_bias_field(ability or "balanced", preset_name=preset_name, honest_mode=honest_mode)
 
     full_prompt = assemble_prompt(
         system=SYSTEM_PROMPT,

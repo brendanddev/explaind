@@ -171,7 +171,7 @@ def format_ability(name: str, content: str) -> str:
     return _ABILITY_TEMPLATE.format(name=name, content=content.strip())
 
 
-def build_bias_field(ability_name: str, preset_name: str | None = None) -> str:
+def build_bias_field(ability_name: str, preset_name: str | None = None, honest_mode: bool = False) -> str:
     """Return a deterministic recency BIAS FIELD block derived from ability name alone."""
     name = ability_name.lower()
     if name in _RECENCY_FIELDS:
@@ -187,6 +187,11 @@ def build_bias_field(ability_name: str, preset_name: str | None = None) -> str:
     if preset_name is not None:
         lines = field.split("\n")
         lines.insert(-1, f"[PRESET: {preset_name.upper()}]")
+        field = "\n".join(lines)
+    if honest_mode and name == "skeptical":
+        lines = field.split("\n")
+        lines.insert(-1, "[AUDIT MODE: ACTIVE]")
+        lines.insert(-1, "[REPRODUCE: FORBIDDEN]")
         field = "\n".join(lines)
     return field
 
