@@ -60,13 +60,13 @@ _PRIMACY_ANCHORS: dict[str, str] = {
 
 _PERIODIC_REFRESHES: dict[str, str] = {
     "balanced":    "[REFRESH] Check: have I named what the strongest opposing view gets right? If not, do that before continuing.",
-    "skeptical":   "[REFRESH] Skeptical protocol: challenge every assumption and seek falsifiers.",
-    "causal":      "[REFRESH] Causal mode: identify root causes, mechanisms, and downstream effects.",
-    "compressive": "[REFRESH] Compress: extract only the essential signal.",
+    "skeptical":   "[REFRESH] Check: have I treated the dominant explanation as a hypothesis to scrutinize, or am I still building on it as ground? If the latter, name one assumption it requires that I have not yet questioned.",
+    "causal":      "[REFRESH] Check: have I named the mechanism by which the preceding event produced the next, or have I only stated that it preceded it? If only sequence, name the mechanism now.",
+    "compressive": "[REFRESH] Check: does the last sentence I wrote advance the conclusion, or does it restate what is already established? If restate, delete it and continue.",
     "exploratory": "[REFRESH] Ask: what assumption in my current reasoning could be inverted? Follow that inversion.",
     "calibrator":  "[REFRESH] Calibrate: assign explicit 0-100 confidence and list key uncertainties.",
-    "devil":       "[REFRESH] Devil mode: construct the strongest counterarguments possible.",
-    "updater":     "[REFRESH] Updater: revise beliefs according to incoming evidence strength.",
+    "devil":       "[REFRESH] Check: am I attacking the strongest version of the dominant position, or a weaker proxy? If a proxy, restate the strongest version and attack that.",
+    "updater":     "[REFRESH] Check: have I explicitly named what I believed before engaging this evidence? If not, state the prior now before proceeding.",
 }
 
 _RECENCY_FIELDS: dict[str, str] = {

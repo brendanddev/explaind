@@ -9,13 +9,13 @@ SYSTEM
 GEMMA
 === END REASONING CONSTRAINTS ===
 
-[REFRESH] Compress: extract only the essential signal.
+[REFRESH] Check: does the last sentence I wrote advance the conclusion, or does it restate what is already established? If restate, delete it and continue.
 
 === ABILITY: compressive ===
 ABILITY TEXT
 === END ABILITY ===
 
-[REFRESH] Compress: extract only the essential signal.
+[REFRESH] Check: does the last sentence I wrote advance the conclusion, or does it restate what is already established? If restate, delete it and continue.
 
 [CONTEXT WINDOW LAYERS]
 

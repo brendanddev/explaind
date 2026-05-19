@@ -9,13 +9,13 @@ SYSTEM
 GEMMA
 === END REASONING CONSTRAINTS ===
 
-[REFRESH] Skeptical protocol: challenge every assumption and seek falsifiers.
+[REFRESH] Check: have I treated the dominant explanation as a hypothesis to scrutinize, or am I still building on it as ground? If the latter, name one assumption it requires that I have not yet questioned.
 
 === ABILITY: skeptical ===
 ABILITY TEXT
 === END ABILITY ===
 
-[REFRESH] Skeptical protocol: challenge every assumption and seek falsifiers.
+[REFRESH] Check: have I treated the dominant explanation as a hypothesis to scrutinize, or am I still building on it as ground? If the latter, name one assumption it requires that I have not yet questioned.
 
 [CONTEXT WINDOW LAYERS]
 

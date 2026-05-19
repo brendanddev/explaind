@@ -9,13 +9,13 @@ SYSTEM
 GEMMA
 === END REASONING CONSTRAINTS ===
 
-[REFRESH] Causal mode: identify root causes, mechanisms, and downstream effects.
+[REFRESH] Check: have I named the mechanism by which the preceding event produced the next, or have I only stated that it preceded it? If only sequence, name the mechanism now.
 
 === ABILITY: causal ===
 ABILITY TEXT
 === END ABILITY ===
 
-[REFRESH] Causal mode: identify root causes, mechanisms, and downstream effects.
+[REFRESH] Check: have I named the mechanism by which the preceding event produced the next, or have I only stated that it preceded it? If only sequence, name the mechanism now.
 
 [CONTEXT WINDOW LAYERS]
 
