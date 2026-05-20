@@ -6,7 +6,7 @@ import argparse
 from datetime import datetime
 from pathlib import Path
 
-from explaind.color import print_about, print_chain_header, print_chain_meta, print_chain_separator, print_compare_header, print_consensus_progress, print_consensus_report, print_demo_between, print_demo_footer, print_demo_section_header, print_error, print_examples, print_export_confirmation, print_honest_header, print_honest_meta, print_honest_separator, print_list_abilities, print_model_meta, print_model_output, print_run_header, print_scaffold_status, print_scaffold_summary, print_warning
+from explaind.color import print_about, print_chain_header, print_chain_meta, print_chain_separator, print_compare_header, print_consensus_progress, print_consensus_report, print_demo_between, print_demo_footer, print_demo_section_header, print_error, print_examples, print_export_confirmation, print_full_demo_act_header, print_full_demo_closing, print_honest_header, print_honest_meta, print_honest_separator, print_list_abilities, print_model_meta, print_model_output, print_run_header, print_scaffold_status, print_scaffold_summary, print_warning
 from explaind.consensus import run_consensus
 from explaind.exporter import build_demo_export, build_export
 from explaind.scaffold import build_initial_scaffold, parse_scaffold_update, scaffold_to_export_summary, scaffold_to_injection
@@ -227,6 +227,78 @@ def _run_demo(args, config=None, invoker=None, export_path: str | None = None) -
             print_warning(f"explaind: export failed: {e}")
 
 
+_FULL_DEMO_ACT3_QUESTION = "Was the 2008 financial crisis preventable?"
+_FULL_DEMO_ACT4_QUESTION = "Is AI safe?"
+
+
+def _run_full_demo(args, config=None, invoker=None) -> None:
+    _tty = sys.stdout.isatty()
+
+    # Act 1 — What is this?
+    print_full_demo_act_header(1, 5, "What is explaind?")
+    print_about()
+    if _tty:
+        time.sleep(2)
+
+    # Act 2 — What can it do?
+    print_full_demo_act_header(2, 5, "Abilities and presets")
+    print_list_abilities()
+    if _tty:
+        time.sleep(1)
+    name_w = max(len(n) for n in PRESET_MAP) + 2
+    ability_w = max(len(a) for a in PRESET_MAP.values()) + 2
+    for name, ability in PRESET_MAP.items():
+        desc = preset_description(name)
+        print(f"{name:<{name_w}} →  {ability:<{ability_w}} {desc}")
+    if _tty:
+        time.sleep(2)
+
+    # Act 3 — How does it work?
+    print_full_demo_act_header(3, 5, "Prompt physics: the assembled prompt")
+    print("The assembled prompt — every layer visible:")
+    print()
+    try:
+        result, _ = run(_FULL_DEMO_ACT3_QUESTION, ability="skeptical", dry_run=True)
+    except ValueError as e:
+        print_error(f"explaind: {e}")
+        sys.exit(1)
+    print(result)
+    if _tty:
+        time.sleep(2)
+
+    # Act 4 — Steering in action
+    print_full_demo_act_header(4, 5, "Same question, different steering")
+    print("Same question. Two reasoning modes. Two different prompt")
+    print("physics configurations:")
+    print()
+    for ability in ("skeptical", "devil"):
+        try:
+            result, _ = run(_FULL_DEMO_ACT4_QUESTION, ability=ability, dry_run=True)
+        except ValueError as e:
+            print_error(f"explaind: {e}")
+            sys.exit(1)
+        print_compare_header(ability)
+        print()
+        print(result)
+        print()
+    if _tty:
+        time.sleep(2)
+
+    # Act 5 — Live inference
+    print_full_demo_act_header(
+        5, 5,
+        "Live inference: three demonstrations\n  (this will take 3-4 minutes on local hardware)",
+    )
+    if args.dry_run:
+        print("[--dry-run active: skipping live inference]")
+        print(" Run explaind --full-demo without --dry-run to see")
+        print(" live Gemma 4 output.")
+    else:
+        _run_demo(args, config=config, invoker=invoker)
+
+    print_full_demo_closing()
+
+
 class _Spinner:
     _MESSAGES = [
         (0, "thinking..."),
@@ -418,6 +490,17 @@ def main():
             "No input required. Compatible with --dry-run, --think, --export."
         ),
     )
+    parser.add_argument(
+        "--full-demo",
+        action="store_true",
+        default=False,
+        help=(
+            "Full narrative demonstration. Runs five acts in sequence: "
+            "what explaind is, its abilities and presets, the assembled prompt made visible, "
+            "same-question steering comparison, and live Gemma 4 inference. "
+            "Designed for screen recording. No input required."
+        ),
+    )
     args = parser.parse_args()
 
     export_path: str | None = None
@@ -488,6 +571,43 @@ def main():
                 print_error(f"explaind: {e}")
                 sys.exit(1)
             _run_demo(args, config=config, invoker=invoker, export_path=demo_export_path)
+        return
+
+    # --- full-demo mode ---
+    if args.full_demo:
+        _full_demo_conflicts = [
+            (args.demo, "--demo"),
+            (args.ability, "--ability"),
+            (bool(args.compare), "--compare"),
+            (bool(args.chain), "--chain"),
+            (args.honest, "--honest"),
+            (args.consensus is not None, "--consensus"),
+            (args.preset, "--preset"),
+            (args.file_flag, "--file"),
+            (args.scaffold, "--scaffold"),
+        ]
+        for flag_active, flag_name in _full_demo_conflicts:
+            if flag_active:
+                print_error(
+                    "--full-demo runs a self-contained narrative demonstration. "
+                    "Remove other flags to use --full-demo."
+                )
+                sys.exit(1)
+
+        if args.dry_run:
+            _run_full_demo(args)
+        else:
+            try:
+                config = load_config()
+            except ConfigError as e:
+                print_error(f"explaind: {e}")
+                sys.exit(1)
+            try:
+                invoker = build_invoker(config)
+            except ConfigError as e:
+                print_error(f"explaind: {e}")
+                sys.exit(1)
+            _run_full_demo(args, config=config, invoker=invoker)
         return
 
     # --preset, --ability, --compare are mutually exclusive

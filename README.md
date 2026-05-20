@@ -425,11 +425,14 @@ The CLI has several distinct execution modes:
 | `--trace` | Prints a prompt-construction trace to stderr, including model settings, prompt size, layer presence, and scratchpad/context lengths. | Observability | All runtime modes except listing commands | `echo "Inspect me" | explaind --ability updater --trace --dry-run` |
 | `--list-presets` | Prints all six presets and exits without requiring input. | - | Standalone listing command | `explaind --list-presets` |
 | `--demo` | Self-contained demonstration. Runs three curated demonstrations: ability comparison across skeptical, causal, and devil modes; honest mode self-critique with thinking; and calibrated epistemic reasoning. No input required. | - | `--dry-run`, `--think`, `--export`; not with `--ability`, `--compare`, `--chain`, `--honest`, `--consensus`, `--preset`, `--file`, `--scaffold` | `explaind --demo` |
+| `--full-demo` | Full narrative demonstration. Runs five acts in sequence: what explaind is, its abilities and presets, the assembled prompt made visible, same-question steering comparison, and live Gemma 4 inference. Designed for screen recording. No input required. | - | `--dry-run`; not with `--demo`, `--ability`, `--compare`, `--chain`, `--honest`, `--consensus`, `--preset`, `--file`, `--scaffold` | `explaind --full-demo` |
 
 Usage:
   explaind --demo
   explaind --demo --dry-run
   explaind --demo --export
+  explaind --full-demo
+  explaind --full-demo --dry-run
 
 ### Planned but not implemented
 
