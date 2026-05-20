@@ -461,6 +461,61 @@ def print_demo_footer() -> None:
     console.print(t)
 
 
+def print_full_demo_act_header(act_num: int, total: int, title: str) -> None:
+    console = _stdout_console()
+    if not console.is_terminal:
+        print(_DEMO_BORDER)
+        print(f"  Act {act_num} / {total} — {title}")
+        print(_DEMO_BORDER)
+        return
+
+    t = Text()
+    t.append(_DEMO_BORDER + "\n", style="dim")
+    t.append(f"  Act {act_num} / {total}", style="bold")
+    t.append(f" — {title}\n", style="bold white")
+    t.append(_DEMO_BORDER, style="dim")
+    console.print(t)
+
+
+def print_full_demo_closing() -> None:
+    console = _stdout_console()
+    if not console.is_terminal:
+        print(_DEMO_BORDER)
+        print("  Full demonstration complete.")
+        print()
+        print("  What you just saw:")
+        print("    Act 1 — What explaind is and why it exists")
+        print("    Act 2 — 8 abilities and 6 presets")
+        print("    Act 3 — The assembled prompt: layers made visible")
+        print("    Act 4 — Same question, different steering")
+        print("    Act 5 — Live Gemma 4 cognitive steering")
+        print()
+        print("  Get started:")
+        print('    echo "your question" | explaind --ability skeptical')
+        print('    echo "your question" | explaind --compare skeptical causal devil')
+        print('    echo "your question" | explaind --honest --think')
+        print("    explaind --examples")
+        print(_DEMO_BORDER)
+        return
+
+    t = Text()
+    t.append(_DEMO_BORDER + "\n", style="dim")
+    t.append("  Full demonstration complete.\n\n", style="bold white")
+    t.append("  What you just saw:\n", style="bold")
+    t.append("    Act 1 — What explaind is and why it exists\n", style="dim")
+    t.append("    Act 2 — 8 abilities and 6 presets\n", style="dim")
+    t.append("    Act 3 — The assembled prompt: layers made visible\n", style="dim")
+    t.append("    Act 4 — Same question, different steering\n", style="dim")
+    t.append("    Act 5 — Live Gemma 4 cognitive steering\n\n", style="dim")
+    t.append("  Get started:\n", style="bold")
+    t.append('    echo "your question" | explaind --ability skeptical\n', style="dim cyan")
+    t.append('    echo "your question" | explaind --compare skeptical causal devil\n', style="dim cyan")
+    t.append('    echo "your question" | explaind --honest --think\n', style="dim cyan")
+    t.append("    explaind --examples\n", style="dim cyan")
+    t.append(_DEMO_BORDER, style="dim")
+    console.print(t)
+
+
 def print_consensus_report(report: dict) -> None:
     n = report["n"]
     agreement = report["agreement"]
